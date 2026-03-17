@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useOnlineStatus } from "@/hooks/use-online-status";
+import { useTautoko } from "@/components/ai/agent-context";
 import {
   IconHome,
   IconUsers,
@@ -23,6 +24,7 @@ const navItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const isOnline = useOnlineStatus();
+  const { toggle: toggleTautoko } = useTautoko();
 
   return (
     <>
@@ -58,7 +60,10 @@ export function Sidebar() {
         </nav>
 
         <div className="px-3 pb-2">
-          <button className="flex items-center gap-3 w-full px-3 py-2 text-sm text-plum-600 rounded-[10px] hover:bg-plum-50 transition-colors duration-150">
+          <button
+            onClick={toggleTautoko}
+            className="flex items-center gap-3 w-full px-3 py-2 text-sm text-plum-600 rounded-[10px] hover:bg-plum-50 transition-colors duration-150"
+          >
             <IconSparkles size={20} />
             <span>Tautoko AI</span>
           </button>
