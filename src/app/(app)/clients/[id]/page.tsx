@@ -6,6 +6,7 @@ import { db } from "@/lib/db/schema";
 import { GestationBadge } from "@/components/clinical/gestation-badge";
 import { ClinicalSummary } from "@/components/clinical/clinical-summary";
 import { VisitTimeline } from "@/components/clinical/visit-timeline";
+import { DocumentsTab } from "@/components/clinical/documents-tab";
 import { MobileHeader } from "@/components/ui/mobile-header";
 import { SkeletonCard } from "@/components/ui/skeleton";
 import type { Client, Registration, MaternalHistory, AntenatalVisit, PostnatalVisit, LabourBirth } from "@/lib/supabase/types";
@@ -179,9 +180,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
         </div>
       )}
       {activeTab === "documents" && (
-        <div className="bg-white rounded-[14px] border border-warm-200 p-4 md:p-6">
-          <p className="text-sm text-warm-400">No documents uploaded yet.</p>
-        </div>
+        <DocumentsTab clientId={id} registrationId={registration?.id} />
       )}
     </div>
   );

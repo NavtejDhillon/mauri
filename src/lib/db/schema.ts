@@ -8,6 +8,7 @@ import type {
   LabourBirth,
   Appointment,
   Claim,
+  Attachment,
 } from "@/lib/supabase/types";
 
 export interface SyncableRecord {
@@ -42,6 +43,7 @@ export class MauriDB extends Dexie {
   labourBirths!: Table<LabourBirth & SyncableRecord>;
   appointments!: Table<Appointment & SyncableRecord>;
   claims!: Table<Claim & SyncableRecord>;
+  attachments!: Table<Attachment & SyncableRecord>;
   syncQueue!: Table<SyncQueueEntry>;
   syncState!: Table<SyncState>;
 
@@ -59,6 +61,23 @@ export class MauriDB extends Dexie {
       appointments:
         "id, appointment_datetime, client_id, status, _pending_sync",
       claims: "id, registration_id, status, updated_at, _pending_sync",
+      syncQueue: "++seq, table, record_id, action, created_at",
+      syncState: "table",
+    });
+
+    this.version(2).stores({
+      clients: "id, nhi, last_name, updated_at, _pending_sync",
+      registrations: "id, client_id, status, updated_at, _pending_sync",
+      maternalHistories: "id, client_id, updated_at",
+      antenatalVisits:
+        "id, registration_id, visit_date, updated_at, _pending_sync",
+      postnatalVisits:
+        "id, registration_id, visit_date, updated_at, _pending_sync",
+      labourBirths: "id, registration_id, updated_at",
+      appointments:
+        "id, appointment_datetime, client_id, status, _pending_sync",
+      claims: "id, registration_id, status, updated_at, _pending_sync",
+      attachments: "id, client_id, registration_id, attachment_type, _pending_sync",
       syncQueue: "++seq, table, record_id, action, created_at",
       syncState: "table",
     });

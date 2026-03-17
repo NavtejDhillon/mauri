@@ -9,7 +9,8 @@ type SyncableTable =
   | "postnatalVisits"
   | "labourBirths"
   | "appointments"
-  | "claims";
+  | "claims"
+  | "attachments";
 
 const TABLE_TO_SUPABASE: Record<SyncableTable, string> = {
   clients: "client",
@@ -20,6 +21,7 @@ const TABLE_TO_SUPABASE: Record<SyncableTable, string> = {
   labourBirths: "labour_birth",
   appointments: "appointment",
   claims: "claim",
+  attachments: "attachment",
 };
 
 function getTable(tableName: SyncableTable): Table<SyncableRecord> {
