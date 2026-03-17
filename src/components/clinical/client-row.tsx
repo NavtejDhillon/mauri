@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { IconChevronRight } from "@/components/ui/icons";
 import type { Client, Registration } from "@/lib/supabase/types";
 import { GestationBadge } from "./gestation-badge";
 
@@ -32,16 +33,16 @@ export function ClientRow({ client, registration }: ClientRowProps) {
   return (
     <Link
       href={`/clients/${client.id}`}
-      className="flex items-center justify-between px-4 py-3 hover:bg-warm-50 transition-colors duration-150 border-b border-warm-200 last:border-b-0"
+      className="flex items-center justify-between px-4 py-3.5 active:bg-warm-50 transition-colors duration-100 border-b border-warm-200 last:border-b-0"
     >
-      <div className="flex items-center gap-3">
-        <div className="w-9 h-9 rounded-full bg-sage-100 flex items-center justify-center text-sm font-medium text-sage-700">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="w-11 h-11 rounded-full bg-sage-100 flex items-center justify-center text-sm font-medium text-sage-700 flex-shrink-0">
           {client.first_name[0]}
           {client.last_name[0]}
         </div>
-        <div>
-          <p className="text-sm font-medium text-sage-900">{displayName}</p>
-          <p className="text-xs text-warm-400">
+        <div className="min-w-0 flex-1">
+          <p className="text-[15px] font-medium text-sage-900 truncate">{displayName}</p>
+          <p className="text-xs text-warm-400 truncate">
             {client.nhi && <span className="font-mono">{client.nhi}</span>}
             {client.nhi && registration && " · "}
             {registration?.agreed_edd && (
@@ -51,9 +52,11 @@ export function ClientRow({ client, registration }: ClientRowProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
         {registration?.agreed_edd && registration.status === "active" && (
-          <GestationBadge edd={registration.agreed_edd} />
+          <span className="hidden md:inline-flex">
+            <GestationBadge edd={registration.agreed_edd} />
+          </span>
         )}
         {registration && (
           <span
@@ -62,6 +65,7 @@ export function ClientRow({ client, registration }: ClientRowProps) {
             {registration.status}
           </span>
         )}
+        <IconChevronRight size={18} className="text-warm-300 md:hidden" />
       </div>
     </Link>
   );

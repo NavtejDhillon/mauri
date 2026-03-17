@@ -28,6 +28,7 @@
   --color-coral-200: #f9b0a0;
   --color-coral-400: #e87756;
   --color-coral-600: #c45535;
+  --color-coral-700: #a84529;
   --color-coral-800: #7a2e1a;
 
   --color-sky-50: #eef6fb;
@@ -42,6 +43,9 @@
   --color-plum-600: #6d3f85;
   --color-plum-800: #3e2050;
 
+  --color-amber-50: #fffbeb;
+  --color-amber-700: #b45309;
+
   --font-sans: var(--font-instrument-sans);
   --font-mono: var(--font-jetbrains-mono);
 
@@ -50,13 +54,105 @@
   --radius-xl: 20px;
 }
 
+/* ─── Base ─────────────────────────────────────── */
+
 body {
   background: var(--color-warm-50);
   color: var(--color-warm-800);
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent overscroll bounce on iOS */
+  overscroll-behavior-y: contain;
 }
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--color-sage-900);
   letter-spacing: -0.02em;
+}
+
+/* ─── Mobile-first: prevent iOS zoom on inputs ── */
+
+input, select, textarea {
+  font-size: 16px;
+}
+
+@media (min-width: 768px) {
+  input, select, textarea {
+    font-size: 14px;
+  }
+}
+
+/* ─── Touch interaction feedback ─────────────── */
+
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ─── Native-feel scrolling ──────────────────── */
+
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Horizontal scroll for filter pills */
+.scroll-pills {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-pills::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Skeleton loading animation ─────────────── */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-warm-100) 25%,
+    var(--color-warm-50) 50%,
+    var(--color-warm-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius);
+}
+
+/* ─── Bottom sheet animation ─────────────────── */
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sheet-enter {
+  animation: slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.backdrop-enter {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* ─── Safe area spacing helpers ──────────────── */
+
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }

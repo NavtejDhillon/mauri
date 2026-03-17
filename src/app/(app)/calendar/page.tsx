@@ -3,6 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { db } from "@/lib/db/schema";
 import { createAppointment, updateAppointment, deleteAppointment } from "@/hooks/use-appointments";
+import { MobileHeader } from "@/components/ui/mobile-header";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { FAB } from "@/components/ui/fab";
+import { IconChevronLeft, IconChevronRight } from "@/components/ui/icons";
 import type { Appointment, AppointmentType, AppointmentStatus, Client } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
 
@@ -38,20 +42,14 @@ export default function CalendarPage() {
   useEffect(() => { loadData(); }, [loadData]);
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Sun
-  const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1; // Mon=0
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  const startOffset = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
 
   const monthName = currentDate.toLocaleDateString("en-NZ", { month: "long", year: "numeric" });
 
-  function prevMonth() {
-    setCurrentDate(new Date(year, month - 1, 1));
-  }
-  function nextMonth() {
-    setCurrentDate(new Date(year, month + 1, 1));
-  }
-  function goToday() {
-    setCurrentDate(new Date());
-  }
+  function prevMonth() { setCurrentDate(new Date(year, month - 1, 1)); }
+  function nextMonth() { setCurrentDate(new Date(year, month + 1, 1)); }
+  function goToday() { setCurrentDate(new Date()); }
 
   function getAppointmentsForDay(day: number) {
     const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -71,32 +69,40 @@ export default function CalendarPage() {
     await loadData();
   }
 
+  void loading;
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[26px] font-semibold text-sage-900">Calendar</h1>
-        <button
-          onClick={() => { setShowForm(true); setEditingAppointment(null); }}
-          className="px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 transition-colors duration-150"
-        >
-          New appointment
-        </button>
-      </div>
+      <MobileHeader
+        title="Calendar"
+        rightAction={
+          <button
+            onClick={() => { setShowForm(true); setEditingAppointment(null); }}
+            className="hidden md:inline-flex px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 transition-colors duration-150"
+          >
+            New appointment
+          </button>
+        }
+      />
 
-      {/* View toggle and navigation */}
+      {/* Navigation */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <button onClick={prevMonth} className="p-2 text-warm-400 hover:text-warm-600 transition-colors duration-150">&larr;</button>
-          <h2 className="text-lg font-medium text-sage-900 min-w-[200px] text-center">{monthName}</h2>
-          <button onClick={nextMonth} className="p-2 text-warm-400 hover:text-warm-600 transition-colors duration-150">&rarr;</button>
-          <button onClick={goToday} className="ml-2 px-3 py-1 text-xs font-medium text-sage-600 border border-sage-200 rounded-full hover:bg-sage-50 transition-colors duration-150">
+        <div className="flex items-center gap-1">
+          <button onClick={prevMonth} className="flex items-center justify-center w-10 h-10 rounded-full active:bg-warm-100 transition-colors duration-100">
+            <IconChevronLeft size={20} className="text-warm-500" />
+          </button>
+          <h2 className="text-[15px] md:text-lg font-medium text-sage-900 min-w-[140px] md:min-w-[200px] text-center">{monthName}</h2>
+          <button onClick={nextMonth} className="flex items-center justify-center w-10 h-10 rounded-full active:bg-warm-100 transition-colors duration-100">
+            <IconChevronRight size={20} className="text-warm-500" />
+          </button>
+          <button onClick={goToday} className="ml-1 px-3 py-1.5 text-xs font-medium text-sage-600 border border-sage-200 rounded-full active:bg-sage-50 transition-colors duration-150">
             Today
           </button>
         </div>
         <div className="flex gap-1">
           <button
             onClick={() => setViewMode("month")}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 ${
+            className={`px-3 py-2 md:py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 active:scale-95 ${
               viewMode === "month" ? "bg-sage-600 text-white border-sage-600" : "bg-white text-warm-600 border-warm-200"
             }`}
           >
@@ -104,7 +110,7 @@ export default function CalendarPage() {
           </button>
           <button
             onClick={() => { setViewMode("day"); if (!selectedDate) setSelectedDate(todayStr); }}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 ${
+            className={`px-3 py-2 md:py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 active:scale-95 ${
               viewMode === "day" ? "bg-sage-600 text-white border-sage-600" : "bg-white text-warm-600 border-warm-200"
             }`}
           >
@@ -117,14 +123,17 @@ export default function CalendarPage() {
         <div className="bg-white rounded-[14px] border border-warm-200 overflow-hidden">
           {/* Day headers */}
           <div className="grid grid-cols-7 border-b border-warm-200">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-              <div key={d} className="px-2 py-2 text-xs font-medium text-warm-400 text-center">{d}</div>
+            {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+              <div key={i} className="py-2 text-[11px] md:text-xs font-medium text-warm-400 text-center">
+                <span className="md:hidden">{d}</span>
+                <span className="hidden md:inline">{["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i]}</span>
+              </div>
             ))}
           </div>
           {/* Calendar grid */}
           <div className="grid grid-cols-7">
             {Array.from({ length: startOffset }).map((_, i) => (
-              <div key={`empty-${i}`} className="min-h-[80px] border-b border-r border-warm-100" />
+              <div key={`empty-${i}`} className="min-h-[48px] md:min-h-[80px] border-b border-r border-warm-100" />
             ))}
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const day = i + 1;
@@ -135,14 +144,28 @@ export default function CalendarPage() {
                 <button
                   key={day}
                   onClick={() => handleDayClick(day)}
-                  className="min-h-[80px] border-b border-r border-warm-100 p-1 text-left hover:bg-warm-50 transition-colors duration-150"
+                  className="min-h-[48px] md:min-h-[80px] border-b border-r border-warm-100 p-1 text-left active:bg-warm-50 transition-colors duration-100"
                 >
-                  <span className={`inline-flex items-center justify-center w-6 h-6 text-xs font-medium rounded-full ${
+                  <span className={`inline-flex items-center justify-center w-7 h-7 md:w-6 md:h-6 text-xs font-medium rounded-full ${
                     isToday ? "bg-sage-600 text-white" : "text-warm-600"
                   }`}>
                     {day}
                   </span>
-                  <div className="mt-0.5 space-y-0.5">
+                  {/* Mobile: just dots */}
+                  <div className="flex gap-0.5 mt-0.5 md:hidden">
+                    {dayAppts.slice(0, 4).map((apt) => (
+                      <div
+                        key={apt.id}
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          apt.status === "cancelled" ? "bg-warm-300" :
+                          apt.status === "no_show" ? "bg-coral-400" :
+                          "bg-sage-400"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  {/* Desktop: appointment previews */}
+                  <div className="hidden md:block mt-0.5 space-y-0.5">
                     {dayAppts.slice(0, 3).map((apt) => {
                       const client = apt.client_id ? clients.get(apt.client_id) : null;
                       return (
@@ -185,15 +208,25 @@ export default function CalendarPage() {
         />
       )}
 
-      {showForm && (
-        <AppointmentForm
+      {/* FAB for mobile */}
+      <div className="md:hidden">
+        <FAB onClick={() => { setShowForm(true); setEditingAppointment(null); }} label="New appointment" />
+      </div>
+
+      {/* Appointment form as bottom sheet */}
+      <BottomSheet
+        open={showForm}
+        onClose={() => { setShowForm(false); setEditingAppointment(null); }}
+        title={editingAppointment ? "Edit appointment" : "New appointment"}
+      >
+        <AppointmentFormContent
           appointment={editingAppointment}
           defaultDate={selectedDate || todayStr}
           clients={clients}
           onClose={() => { setShowForm(false); setEditingAppointment(null); }}
           onSaved={() => { setShowForm(false); setEditingAppointment(null); loadData(); }}
         />
-      )}
+      </BottomSheet>
     </div>
   );
 }
@@ -214,7 +247,7 @@ function DayView({
   onDateChange: (date: string) => void;
 }) {
   const dt = new Date(date);
-  const dayLabel = dt.toLocaleDateString("en-NZ", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const dayLabel = dt.toLocaleDateString("en-NZ", { weekday: "long", day: "numeric", month: "long" });
 
   function prevDay() {
     const prev = new Date(dt);
@@ -229,15 +262,19 @@ function DayView({
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-4">
-        <button onClick={prevDay} className="p-2 text-warm-400 hover:text-warm-600">&larr;</button>
-        <h3 className="text-[15px] font-medium text-sage-900">{dayLabel}</h3>
-        <button onClick={nextDay} className="p-2 text-warm-400 hover:text-warm-600">&rarr;</button>
+      <div className="flex items-center gap-1 mb-4">
+        <button onClick={prevDay} className="flex items-center justify-center w-10 h-10 rounded-full active:bg-warm-100 transition-colors duration-100">
+          <IconChevronLeft size={20} className="text-warm-500" />
+        </button>
+        <h3 className="text-[15px] font-medium text-sage-900 flex-1 text-center">{dayLabel}</h3>
+        <button onClick={nextDay} className="flex items-center justify-center w-10 h-10 rounded-full active:bg-warm-100 transition-colors duration-100">
+          <IconChevronRight size={20} className="text-warm-500" />
+        </button>
       </div>
 
       <div className="bg-white rounded-[14px] border border-warm-200 overflow-hidden">
         {appointments.length === 0 ? (
-          <div className="p-6 text-sm text-warm-400">No appointments for this day.</div>
+          <div className="p-6 text-sm text-warm-400 text-center">No appointments for this day.</div>
         ) : (
           appointments.map((apt) => {
             const client = apt.client_id ? clients.get(apt.client_id) : null;
@@ -245,21 +282,21 @@ function DayView({
               hour: "2-digit", minute: "2-digit", hour12: false,
             });
             return (
-              <div key={apt.id} className="flex items-center justify-between px-4 py-3 border-b border-warm-200 last:border-b-0">
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-sm text-warm-600 w-12">{time}</span>
-                  <div>
-                    <p className="text-sm font-medium text-sage-900">
+              <div key={apt.id} className="flex items-center justify-between px-4 py-3.5 border-b border-warm-200 last:border-b-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <span className="font-mono text-sm text-warm-600 w-12 flex-shrink-0">{time}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-sage-900 truncate">
                       {client ? `${client.preferred_name || client.first_name} ${client.last_name}` : "No client"}
                     </p>
-                    <p className="text-xs text-warm-400">
+                    <p className="text-xs text-warm-400 truncate">
                       {apt.appointment_type?.replace(/_/g, " ")} · {apt.duration_minutes}min
                       {apt.location && ` · ${apt.location}`}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-0.5 text-[11px] font-medium rounded-full border ${
+                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                  <span className={`hidden md:inline-flex px-2 py-0.5 text-[11px] font-medium rounded-full border ${
                     apt.status === "completed" ? "bg-sage-50 text-sage-800 border-sage-100" :
                     apt.status === "cancelled" ? "bg-warm-50 text-warm-400 border-warm-200" :
                     apt.status === "confirmed" ? "bg-sky-50 text-sky-800 border-sky-100" :
@@ -267,8 +304,8 @@ function DayView({
                   }`}>
                     {apt.status}
                   </span>
-                  <button onClick={() => onEdit(apt)} className="text-xs text-sage-600 hover:text-sage-800">Edit</button>
-                  <button onClick={() => onDelete(apt.id)} className="text-xs text-coral-600 hover:text-coral-800">Delete</button>
+                  <button onClick={() => onEdit(apt)} className="px-2 py-2 text-xs text-sage-600 active:text-sage-800">Edit</button>
+                  <button onClick={() => onDelete(apt.id)} className="px-2 py-2 text-xs text-coral-600 active:text-coral-800">Delete</button>
                 </div>
               </div>
             );
@@ -279,7 +316,7 @@ function DayView({
   );
 }
 
-function AppointmentForm({
+function AppointmentFormContent({
   appointment,
   defaultDate,
   clients,
@@ -330,123 +367,85 @@ function AppointmentForm({
     onSaved();
   }
 
+  const inputClass = "w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150";
+
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-[14px] border border-warm-200 p-6 w-full max-w-md shadow-lg" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-[15px] font-medium text-sage-900 mb-4">
-          {appointment ? "Edit appointment" : "New appointment"}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Client</label>
-            <select
-              name="client_id"
-              defaultValue={appointment?.client_id || ""}
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            >
-              <option value="">No client</option>
-              {clientList.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.first_name} {c.last_name}
-                  {c.nhi ? ` (${c.nhi})` : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Date and time</label>
-            <input
-              name="appointment_datetime"
-              type="datetime-local"
-              defaultValue={defaultDatetime}
-              required
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Duration (min)</label>
-              <input
-                name="duration_minutes"
-                type="number"
-                defaultValue={appointment?.duration_minutes || 30}
-                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Type</label>
-              <select
-                name="appointment_type"
-                defaultValue={appointment?.appointment_type || "antenatal"}
-                className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-              >
-                <option value="antenatal">Antenatal</option>
-                <option value="postnatal">Postnatal</option>
-                <option value="initial">Initial</option>
-                <option value="follow_up">Follow-up</option>
-                <option value="scan">Scan</option>
-                <option value="bloods">Bloods</option>
-                <option value="admin">Admin</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Location</label>
-            <input
-              name="location"
-              defaultValue={appointment?.location || ""}
-              placeholder="Home, clinic, hospital..."
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Status</label>
-            <select
-              name="status"
-              defaultValue={appointment?.status || "scheduled"}
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            >
-              <option value="scheduled">Scheduled</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
-              <option value="no_show">No show</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Notes</label>
-            <textarea
-              name="notes"
-              rows={2}
-              defaultValue={appointment?.notes || ""}
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] hover:bg-warm-50 transition-colors duration-150"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 disabled:opacity-50 transition-colors duration-150"
-            >
-              {saving ? "Saving..." : appointment ? "Update" : "Create"}
-            </button>
-          </div>
-        </form>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Client</label>
+        <select name="client_id" defaultValue={appointment?.client_id || ""} className={inputClass}>
+          <option value="">No client</option>
+          {clientList.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.first_name} {c.last_name}
+              {c.nhi ? ` (${c.nhi})` : ""}
+            </option>
+          ))}
+        </select>
       </div>
-    </div>
+
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Date and time</label>
+        <input name="appointment_datetime" type="datetime-local" defaultValue={defaultDatetime} required className={inputClass} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Duration (min)</label>
+          <input name="duration_minutes" type="number" defaultValue={appointment?.duration_minutes || 30} className={inputClass} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Type</label>
+          <select name="appointment_type" defaultValue={appointment?.appointment_type || "antenatal"} className={inputClass}>
+            <option value="antenatal">Antenatal</option>
+            <option value="postnatal">Postnatal</option>
+            <option value="initial">Initial</option>
+            <option value="follow_up">Follow-up</option>
+            <option value="scan">Scan</option>
+            <option value="bloods">Bloods</option>
+            <option value="admin">Admin</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Location</label>
+        <input name="location" defaultValue={appointment?.location || ""} placeholder="Home, clinic, hospital..." className={inputClass} />
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Status</label>
+        <select name="status" defaultValue={appointment?.status || "scheduled"} className={inputClass}>
+          <option value="scheduled">Scheduled</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="no_show">No show</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Notes</label>
+        <textarea name="notes" rows={2} defaultValue={appointment?.notes || ""} className={inputClass} />
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 px-4 py-3 md:py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] active:bg-warm-50 transition-colors duration-150"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex-1 px-4 py-3 md:py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] active:bg-sage-700 disabled:opacity-50 transition-colors duration-150"
+        >
+          {saving ? "Saving..." : appointment ? "Update" : "Create"}
+        </button>
+      </div>
+    </form>
   );
 }

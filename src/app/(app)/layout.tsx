@@ -8,7 +8,8 @@ export default function AppLayout({
   return (
     <div className="min-h-screen bg-warm-50">
       <Sidebar />
-      <main className="ml-60 p-6">
+      {/* Mobile: full width with bottom tab padding. Desktop: offset for sidebar */}
+      <main className="px-4 pt-4 pb-24 md:ml-60 md:p-6">
         {children}
       </main>
     </div>

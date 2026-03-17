@@ -2,14 +2,20 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { db } from "@/lib/db/schema";
 import { ClientRow } from "@/components/clinical/client-row";
+import { MobileHeader } from "@/components/ui/mobile-header";
+import { FAB } from "@/components/ui/fab";
+import { SkeletonList } from "@/components/ui/skeleton";
+import { IconSearch } from "@/components/ui/icons";
 import type { Client, Registration } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
 
 type StatusFilter = "all" | "active" | "postnatal" | "discharged" | "transferred";
 
 export default function ClientsPage() {
+  const router = useRouter();
   const [clients, setClients] = useState<(Client & SyncableRecord)[]>([]);
   const [registrations, setRegistrations] = useState<Map<string, Registration & SyncableRecord>>(new Map());
   const [search, setSearch] = useState("");
@@ -63,59 +69,73 @@ export default function ClientsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[26px] font-semibold text-sage-900">Clients</h1>
-        <Link
-          href="/clients/new"
-          className="px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 transition-colors duration-150"
-        >
-          Add client
-        </Link>
-      </div>
+      <MobileHeader
+        title="Clients"
+        rightAction={
+          <Link
+            href="/clients/new"
+            className="hidden md:inline-flex px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 transition-colors duration-150"
+          >
+            Add client
+          </Link>
+        }
+      />
 
-      <div className="flex items-center gap-3 mb-4">
+      {/* Search bar */}
+      <div className="relative mb-3">
+        <IconSearch size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-warm-400" />
         <input
           type="text"
           placeholder="Search by name or NHI..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-white text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+          className="w-full pl-10 pr-4 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-white text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
         />
-        <div className="flex gap-1">
-          {statusOptions.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setStatusFilter(opt.value)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 ${
-                statusFilter === opt.value
-                  ? "bg-sage-600 text-white border-sage-600"
-                  : "bg-white text-warm-600 border-warm-200 hover:border-warm-300"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
       </div>
 
-      <div className="bg-white rounded-[14px] border border-warm-200 overflow-hidden">
-        {loading ? (
-          <div className="p-6 text-sm text-warm-400">Loading...</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-6 text-sm text-warm-400">
-            {clients.length === 0
-              ? "No clients yet. Add your first client to get started."
-              : "No clients match your search."}
-          </div>
-        ) : (
-          filtered.map((client) => (
-            <ClientRow
-              key={client.id}
-              client={client}
-              registration={registrations.get(client.id)}
-            />
-          ))
-        )}
+      {/* Status filter pills — horizontally scrollable on mobile */}
+      <div className="flex gap-1.5 mb-4 overflow-x-auto scroll-pills pb-1">
+        {statusOptions.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setStatusFilter(opt.value)}
+            className={`flex-shrink-0 px-3.5 py-2 md:py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 active:scale-95 ${
+              statusFilter === opt.value
+                ? "bg-sage-600 text-white border-sage-600"
+                : "bg-white text-warm-600 border-warm-200"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Client list */}
+      {loading ? (
+        <SkeletonList count={6} />
+      ) : (
+        <div className="bg-white rounded-[14px] border border-warm-200 overflow-hidden">
+          {filtered.length === 0 ? (
+            <div className="p-6 text-sm text-warm-400 text-center">
+              {clients.length === 0
+                ? "No clients yet. Tap + to add your first client."
+                : "No clients match your search."}
+            </div>
+          ) : (
+            filtered.map((client) => (
+              <ClientRow
+                key={client.id}
+                client={client}
+                registration={registrations.get(client.id)}
+              />
+            ))
+          )}
+        </div>
+      )}
+
+      {/* FAB for mobile — add client */}
+      <div className="md:hidden">
+        <FAB onClick={() => router.push("/clients/new")} label="Add client" />
       </div>
     </div>
   );

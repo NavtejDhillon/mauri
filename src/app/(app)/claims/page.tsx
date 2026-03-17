@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { db } from "@/lib/db/schema";
 import { createClaim, updateClaim, MODULE_AMOUNTS, getModuleLabel, getStatusColor } from "@/hooks/use-claims";
+import { MobileHeader } from "@/components/ui/mobile-header";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { FAB } from "@/components/ui/fab";
 import type { Claim, ClaimModuleType, ClaimPartialType, ClaimStatus, Client, Registration } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
 
@@ -58,34 +61,36 @@ export default function ClaimsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-[26px] font-semibold text-sage-900">Claims</h1>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 transition-colors duration-150"
-        >
-          New claim
-        </button>
-      </div>
+      <MobileHeader
+        title="Claims"
+        rightAction={
+          <button
+            onClick={() => setShowForm(true)}
+            className="hidden md:inline-flex px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 transition-colors duration-150"
+          >
+            New claim
+          </button>
+        }
+      />
 
       {/* Summary cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-5 md:mb-6">
         <SummaryCard label="Draft" amount={totalDraft} />
-        <SummaryCard label="Ready to submit" amount={totalReady} />
+        <SummaryCard label="Ready" amount={totalReady} />
         <SummaryCard label="Submitted" amount={totalSubmitted} />
         <SummaryCard label="Paid" amount={totalPaid} />
       </div>
 
       {/* Filter pills */}
-      <div className="flex gap-1 mb-4">
+      <div className="flex gap-1.5 mb-4 overflow-x-auto scroll-pills pb-1">
         {statusOptions.map((opt) => (
           <button
             key={opt.value}
             onClick={() => setStatusFilter(opt.value)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 ${
+            className={`flex-shrink-0 px-3.5 py-2 md:py-1.5 text-xs font-medium rounded-full border transition-colors duration-150 active:scale-95 ${
               statusFilter === opt.value
                 ? "bg-sage-600 text-white border-sage-600"
-                : "bg-white text-warm-600 border-warm-200 hover:border-warm-300"
+                : "bg-white text-warm-600 border-warm-200"
             }`}
           >
             {opt.label}
@@ -98,9 +103,9 @@ export default function ClaimsPage() {
         {loading ? (
           <div className="p-6 text-sm text-warm-400">Loading...</div>
         ) : filtered.length === 0 ? (
-          <div className="p-6 text-sm text-warm-400">
+          <div className="p-6 text-sm text-warm-400 text-center">
             {claims.length === 0
-              ? "No claims yet. Create your first claim to start tracking Section 94 payments."
+              ? "No claims yet. Tap + to create your first claim."
               : "No claims match this filter."}
           </div>
         ) : (
@@ -108,29 +113,34 @@ export default function ClaimsPage() {
             const reg = registrations.get(claim.registration_id);
             const client = reg ? clients.get(reg.client_id) : undefined;
             return (
-              <div key={claim.id} className="flex items-center justify-between px-4 py-3 border-b border-warm-200 last:border-b-0">
-                <div className="flex items-center gap-3">
-                  {client && (
-                    <Link href={`/clients/${client.id}`} className="text-sm font-medium text-sage-900 hover:text-sage-700">
-                      {client.preferred_name || client.first_name} {client.last_name}
-                    </Link>
-                  )}
-                  <span className="text-xs text-warm-400">{getModuleLabel(claim.module_type)}</span>
-                  {claim.partial_type !== "full" && (
-                    <span className="text-xs text-warm-400">({claim.partial_type})</span>
-                  )}
+              <div key={claim.id} className="px-4 py-3.5 border-b border-warm-200 last:border-b-0">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0 flex-1">
+                    {client && (
+                      <Link href={`/clients/${client.id}`} className="text-sm font-medium text-sage-900 active:text-sage-700 truncate block">
+                        {client.preferred_name || client.first_name} {client.last_name}
+                      </Link>
+                    )}
+                    <p className="text-xs text-warm-400 truncate">
+                      {getModuleLabel(claim.module_type)}
+                      {claim.partial_type !== "full" && ` (${claim.partial_type})`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-3">
+                    <span className="font-mono text-sm font-medium text-warm-800">
+                      ${claim.amount.toFixed(2)}
+                    </span>
+                    <span className={`px-2 py-0.5 text-[11px] font-medium rounded-full border ${getStatusColor(claim.status)}`}>
+                      {claim.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="font-mono text-sm font-medium text-warm-800">
-                    ${claim.amount.toFixed(2)}
-                  </span>
-                  <span className={`px-2 py-0.5 text-[11px] font-medium rounded-full border ${getStatusColor(claim.status)}`}>
-                    {claim.status}
-                  </span>
+                {/* Action buttons */}
+                <div className="flex gap-2 mt-2">
                   {claim.status === "draft" && (
                     <button
                       onClick={() => handleStatusChange(claim.id, "ready")}
-                      className="text-xs text-sage-600 hover:text-sage-800"
+                      className="px-3 py-1.5 text-xs font-medium text-sage-600 bg-sage-50 rounded-full active:bg-sage-100 transition-colors duration-150"
                     >
                       Mark ready
                     </button>
@@ -138,7 +148,7 @@ export default function ClaimsPage() {
                   {claim.status === "ready" && (
                     <button
                       onClick={() => handleStatusChange(claim.id, "submitted")}
-                      className="text-xs text-sage-600 hover:text-sage-800"
+                      className="px-3 py-1.5 text-xs font-medium text-sage-600 bg-sage-50 rounded-full active:bg-sage-100 transition-colors duration-150"
                     >
                       Mark submitted
                     </button>
@@ -146,7 +156,7 @@ export default function ClaimsPage() {
                   {claim.status === "submitted" && (
                     <button
                       onClick={() => handleStatusChange(claim.id, "paid")}
-                      className="text-xs text-sage-600 hover:text-sage-800"
+                      className="px-3 py-1.5 text-xs font-medium text-sage-600 bg-sage-50 rounded-full active:bg-sage-100 transition-colors duration-150"
                     >
                       Mark paid
                     </button>
@@ -158,14 +168,24 @@ export default function ClaimsPage() {
         )}
       </div>
 
-      {showForm && (
-        <ClaimForm
+      {/* FAB for mobile */}
+      <div className="md:hidden">
+        <FAB onClick={() => setShowForm(true)} label="New claim" />
+      </div>
+
+      {/* Claim form as bottom sheet */}
+      <BottomSheet
+        open={showForm}
+        onClose={() => setShowForm(false)}
+        title="New claim"
+      >
+        <ClaimFormContent
           registrations={registrations}
           clients={clients}
           onClose={() => setShowForm(false)}
           onSaved={() => { setShowForm(false); loadData(); }}
         />
-      )}
+      </BottomSheet>
     </div>
   );
 }
@@ -173,13 +193,13 @@ export default function ClaimsPage() {
 function SummaryCard({ label, amount }: { label: string; amount: number }) {
   return (
     <div className="bg-warm-50 rounded-[14px] p-4">
-      <p className="text-xs font-medium text-warm-400 uppercase tracking-[0.05em]">{label}</p>
-      <p className="text-2xl font-semibold font-mono text-sage-900 mt-1">${amount.toFixed(2)}</p>
+      <p className="text-[11px] md:text-xs font-medium text-warm-400 uppercase tracking-[0.05em]">{label}</p>
+      <p className="text-xl md:text-2xl font-semibold font-mono text-sage-900 mt-1">${amount.toFixed(2)}</p>
     </div>
   );
 }
 
-function ClaimForm({
+function ClaimFormContent({
   registrations,
   clients,
   onClose,
@@ -233,91 +253,77 @@ function ClaimForm({
     onSaved();
   }
 
+  const inputClass = "w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150";
+
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white rounded-[14px] border border-warm-200 p-6 w-full max-w-md shadow-lg" onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-[15px] font-medium text-sage-900 mb-4">New claim</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Client</label>
-            <select
-              name="registration_id"
-              required
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            >
-              <option value="">Select client...</option>
-              {activeRegs.map(({ reg, client }) => (
-                <option key={reg.id} value={reg.id}>
-                  {client ? `${client.first_name} ${client.last_name}` : "Unknown"} - {reg.status}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Module</label>
-            <select
-              name="module_type"
-              value={selectedModule}
-              onChange={(e) => setSelectedModule(e.target.value as ClaimModuleType)}
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            >
-              <option value="first_second_trimester">First/second trimester - ${MODULE_AMOUNTS.first_second_trimester}</option>
-              <option value="third_trimester">Third trimester - ${MODULE_AMOUNTS.third_trimester}</option>
-              <option value="labour_birth">Labour and birth - ${MODULE_AMOUNTS.labour_birth}</option>
-              <option value="postnatal">Postnatal - ${MODULE_AMOUNTS.postnatal}</option>
-              <option value="acs_complex_social">ACS: complex social - ${MODULE_AMOUNTS.acs_complex_social}</option>
-              <option value="acs_complex_clinical">ACS: complex clinical - ${MODULE_AMOUNTS.acs_complex_clinical}</option>
-              <option value="acs_additional_care">ACS: additional care - ${MODULE_AMOUNTS.acs_additional_care}</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Claim type</label>
-            <select
-              name="partial_type"
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            >
-              <option value="full">Full claim</option>
-              <option value="first">First LMC (partial)</option>
-              <option value="last">Last LMC (partial)</option>
-            </select>
-          </div>
-
-          <div className="bg-warm-50 rounded-[10px] p-3">
-            <p className="text-xs text-warm-400">Amount</p>
-            <p className="text-lg font-semibold font-mono text-sage-900">
-              ${(MODULE_AMOUNTS[selectedModule] || 0).toFixed(2)}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Notes</label>
-            <textarea
-              name="notes"
-              rows={2}
-              className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] hover:bg-warm-50 transition-colors duration-150"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 disabled:opacity-50 transition-colors duration-150"
-            >
-              {saving ? "Saving..." : "Create claim"}
-            </button>
-          </div>
-        </form>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Client</label>
+        <select name="registration_id" required className={inputClass}>
+          <option value="">Select client...</option>
+          {activeRegs.map(({ reg, client }) => (
+            <option key={reg.id} value={reg.id}>
+              {client ? `${client.first_name} ${client.last_name}` : "Unknown"} - {reg.status}
+            </option>
+          ))}
+        </select>
       </div>
-    </div>
+
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Module</label>
+        <select
+          name="module_type"
+          value={selectedModule}
+          onChange={(e) => setSelectedModule(e.target.value as ClaimModuleType)}
+          className={inputClass}
+        >
+          <option value="first_second_trimester">First/second trimester - ${MODULE_AMOUNTS.first_second_trimester}</option>
+          <option value="third_trimester">Third trimester - ${MODULE_AMOUNTS.third_trimester}</option>
+          <option value="labour_birth">Labour and birth - ${MODULE_AMOUNTS.labour_birth}</option>
+          <option value="postnatal">Postnatal - ${MODULE_AMOUNTS.postnatal}</option>
+          <option value="acs_complex_social">ACS: complex social - ${MODULE_AMOUNTS.acs_complex_social}</option>
+          <option value="acs_complex_clinical">ACS: complex clinical - ${MODULE_AMOUNTS.acs_complex_clinical}</option>
+          <option value="acs_additional_care">ACS: additional care - ${MODULE_AMOUNTS.acs_additional_care}</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Claim type</label>
+        <select name="partial_type" className={inputClass}>
+          <option value="full">Full claim</option>
+          <option value="first">First LMC (partial)</option>
+          <option value="last">Last LMC (partial)</option>
+        </select>
+      </div>
+
+      <div className="bg-warm-50 rounded-[10px] p-3">
+        <p className="text-xs text-warm-400">Amount</p>
+        <p className="text-lg font-semibold font-mono text-sage-900">
+          ${(MODULE_AMOUNTS[selectedModule] || 0).toFixed(2)}
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">Notes</label>
+        <textarea name="notes" rows={2} className={inputClass} />
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex-1 px-4 py-3 md:py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] active:bg-warm-50 transition-colors duration-150"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving}
+          className="flex-1 px-4 py-3 md:py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] active:bg-sage-700 disabled:opacity-50 transition-colors duration-150"
+        >
+          {saving ? "Saving..." : "Create claim"}
+        </button>
+      </div>
+    </form>
   );
 }

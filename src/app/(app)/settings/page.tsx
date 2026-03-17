@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { db } from "@/lib/db/schema";
 import { useSync } from "@/hooks/use-sync";
 import { seedDemoData } from "@/lib/db/seed";
+import { MobileHeader } from "@/components/ui/mobile-header";
 
 export default function SettingsPage() {
   const supabase = createClient();
@@ -37,15 +38,17 @@ export default function SettingsPage() {
     window.location.reload();
   }
 
+  const btnClass = "w-full md:w-auto px-4 py-3 md:py-2 text-sm font-medium rounded-[10px] transition-colors duration-150 active:scale-[0.98]";
+
   return (
-    <div className="max-w-2xl">
-      <h1 className="text-[26px] font-semibold text-sage-900 mb-6">Settings</h1>
+    <div className="md:max-w-2xl">
+      <MobileHeader title="Settings" />
 
       <div className="space-y-4">
         {/* Sync status */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
+        <section className="bg-white rounded-[14px] border border-warm-200 p-4 md:p-6">
           <h2 className="text-[15px] font-medium text-sage-900 mb-3">Sync</h2>
-          <dl className="space-y-2 text-sm mb-4">
+          <dl className="space-y-2.5 text-sm mb-4">
             <InfoRow label="Status" value={isOnline ? "Online" : "Offline"} />
             <InfoRow label="Pending changes" value={pendingCount.toString()} />
             <InfoRow label="Last synced" value={lastSyncedAt ? new Date(lastSyncedAt).toLocaleString("en-NZ") : "Never"} />
@@ -53,23 +56,23 @@ export default function SettingsPage() {
           <button
             onClick={sync}
             disabled={isSyncing || !isOnline}
-            className="px-4 py-2 text-sm font-medium text-sage-600 bg-sage-50 border border-sage-100 rounded-[10px] hover:bg-sage-100 disabled:opacity-50 transition-colors duration-150"
+            className={`${btnClass} text-sage-600 bg-sage-50 border border-sage-100 active:bg-sage-100 disabled:opacity-50`}
           >
             {isSyncing ? "Syncing..." : "Sync now"}
           </button>
         </section>
 
         {/* Local data */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
+        <section className="bg-white rounded-[14px] border border-warm-200 p-4 md:p-6">
           <h2 className="text-[15px] font-medium text-sage-900 mb-3">Local data</h2>
           {dbStats && (
-            <dl className="space-y-2 text-sm mb-4">
+            <dl className="space-y-2.5 text-sm mb-4">
               <InfoRow label="Clients" value={dbStats.clients.toString()} />
               <InfoRow label="Visits" value={dbStats.visits.toString()} />
               <InfoRow label="Claims" value={dbStats.claims.toString()} />
             </dl>
           )}
-          <div className="flex gap-2">
+          <div className="flex flex-col md:flex-row gap-2">
             <button
               onClick={async () => {
                 setSeeding(true);
@@ -77,13 +80,13 @@ export default function SettingsPage() {
                 window.location.reload();
               }}
               disabled={seeding}
-              className="px-4 py-2 text-sm font-medium text-sage-600 bg-sage-50 border border-sage-100 rounded-[10px] hover:bg-sage-100 disabled:opacity-50 transition-colors duration-150"
+              className={`${btnClass} text-sage-600 bg-sage-50 border border-sage-100 active:bg-sage-100 disabled:opacity-50`}
             >
               {seeding ? "Loading..." : "Load demo data"}
             </button>
             <button
               onClick={handleClearLocal}
-              className="px-4 py-2 text-sm font-medium text-coral-600 bg-coral-50 border border-coral-100 rounded-[10px] hover:bg-coral-100 transition-colors duration-150"
+              className={`${btnClass} text-coral-600 bg-coral-50 border border-coral-100 active:bg-coral-100`}
             >
               Clear local data
             </button>
@@ -91,20 +94,20 @@ export default function SettingsPage() {
         </section>
 
         {/* Account */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
+        <section className="bg-white rounded-[14px] border border-warm-200 p-4 md:p-6">
           <h2 className="text-[15px] font-medium text-sage-900 mb-3">Account</h2>
           <button
             onClick={handleSignOut}
-            className="px-4 py-2 text-sm font-medium text-coral-600 bg-coral-50 border border-coral-100 rounded-[10px] hover:bg-coral-100 transition-colors duration-150"
+            className={`${btnClass} text-coral-600 bg-coral-50 border border-coral-100 active:bg-coral-100`}
           >
             Sign out
           </button>
         </section>
 
         {/* App info */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
+        <section className="bg-white rounded-[14px] border border-warm-200 p-4 md:p-6">
           <h2 className="text-[15px] font-medium text-sage-900 mb-3">About</h2>
-          <dl className="space-y-2 text-sm">
+          <dl className="space-y-2.5 text-sm">
             <InfoRow label="App" value="Mauri" />
             <InfoRow label="Version" value="0.1.0" />
             <InfoRow label="Framework" value="Next.js 16" />
@@ -117,7 +120,7 @@ export default function SettingsPage() {
 
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
-    <div className="flex justify-between">
+    <div className="flex justify-between gap-4">
       <dt className="text-warm-400">{label}</dt>
       <dd className="text-warm-800 font-medium">{value || "-"}</dd>
     </div>

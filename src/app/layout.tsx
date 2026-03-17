@@ -18,12 +18,20 @@ export const metadata: Metadata = {
   title: "Mauri - Maternity Practice",
   description: "Maternity practice management for NZ midwives",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Mauri",
+  },
 };
 
 export const viewport: Viewport = {
   themeColor: "#4a7040",
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -33,6 +41,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body
         className={`${instrumentSans.variable} ${jetbrainsMono.variable} antialiased`}
       >

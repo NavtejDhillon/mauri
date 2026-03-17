@@ -3,11 +3,16 @@
   "short_name": "Mauri",
   "description": "Maternity practice management for NZ midwives",
   "start_url": "/dashboard",
+  "id": "/dashboard",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "scope": "/",
   "background_color": "#faf8f5",
   "theme_color": "#4a7040",
+  "categories": ["medical", "health"],
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ]
 }
