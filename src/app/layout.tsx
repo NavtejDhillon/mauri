@@ -50,6 +50,23 @@ export default function RootLayout({
         className={`${instrumentSans.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(reg) {
+                      console.log('[SW] Registered, scope:', reg.scope);
+                    })
+                    .catch(function(err) {
+                      console.log('[SW] Registration failed:', err);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
