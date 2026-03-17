@@ -1,0 +1,13 @@
+{
+  "name": "Mauri - Maternity Practice",
+  "short_name": "Mauri",
+  "description": "Maternity practice management for NZ midwives",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#faf8f5",
+  "theme_color": "#4a7040",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
