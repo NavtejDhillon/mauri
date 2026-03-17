@@ -66,14 +66,31 @@ export default function ClaimsPage() {
       <MobileHeader
         title="Claims"
         rightAction={
-          <button
-            onClick={() => setShowForm(true)}
-            className="hidden md:inline-flex px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 transition-colors duration-150"
-          >
-            New claim
-          </button>
+          <div className="hidden md:flex gap-2">
+            <Link
+              href="/reports"
+              className="px-4 py-2 text-sm font-medium text-sage-600 bg-sage-50 border border-sage-100 rounded-[10px] hover:bg-sage-100 transition-colors duration-150"
+            >
+              Reports
+            </Link>
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 transition-colors duration-150"
+            >
+              New claim
+            </button>
+          </div>
         }
       />
+
+      {/* Reports link for mobile */}
+      <Link
+        href="/reports"
+        className="flex items-center justify-between px-4 py-3 mb-4 bg-white rounded-[14px] border border-warm-200 active:bg-warm-50 transition-colors duration-150 md:hidden"
+      >
+        <span className="text-sm font-medium text-sage-900">View reports &amp; export</span>
+        <span className="text-xs text-warm-400">→</span>
+      </Link>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-5 md:mb-6">
