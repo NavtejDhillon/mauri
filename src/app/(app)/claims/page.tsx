@@ -7,6 +7,7 @@ import { createClaim, updateClaim, MODULE_AMOUNTS, getModuleLabel, getStatusColo
 import { MobileHeader } from "@/components/ui/mobile-header";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { FAB } from "@/components/ui/fab";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import type { Claim, ClaimModuleType, ClaimPartialType, ClaimStatus, Client, Registration } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
 
@@ -60,6 +61,7 @@ export default function ClaimsPage() {
   }
 
   return (
+    <PullToRefresh onRefresh={loadData}>
     <div>
       <MobileHeader
         title="Claims"
@@ -187,6 +189,7 @@ export default function ClaimsPage() {
         />
       </BottomSheet>
     </div>
+    </PullToRefresh>
   );
 }
 

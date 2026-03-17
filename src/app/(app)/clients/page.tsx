@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/db/schema";
@@ -8,7 +8,9 @@ import { ClientRow } from "@/components/clinical/client-row";
 import { MobileHeader } from "@/components/ui/mobile-header";
 import { FAB } from "@/components/ui/fab";
 import { SkeletonList } from "@/components/ui/skeleton";
-import { IconSearch } from "@/components/ui/icons";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
+import { SwipeableRow } from "@/components/ui/swipeable-row";
+import { IconSearch, IconPhone, IconEdit } from "@/components/ui/icons";
 import type { Client, Registration } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
 
@@ -22,25 +24,24 @@ export default function ClientsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function load() {
-      const allClients = await db.clients.filter((c) => !c.deleted_at).toArray();
-      const allRegs = await db.registrations.filter((r) => !r.deleted_at).toArray();
+  const loadData = useCallback(async () => {
+    const allClients = await db.clients.filter((c) => !c.deleted_at).toArray();
+    const allRegs = await db.registrations.filter((r) => !r.deleted_at).toArray();
 
-      const regMap = new Map<string, Registration & SyncableRecord>();
-      for (const reg of allRegs) {
-        const existing = regMap.get(reg.client_id);
-        if (!existing || reg.status === "active" || reg.status === "postnatal") {
-          regMap.set(reg.client_id, reg);
-        }
+    const regMap = new Map<string, Registration & SyncableRecord>();
+    for (const reg of allRegs) {
+      const existing = regMap.get(reg.client_id);
+      if (!existing || reg.status === "active" || reg.status === "postnatal") {
+        regMap.set(reg.client_id, reg);
       }
-
-      setClients(allClients);
-      setRegistrations(regMap);
-      setLoading(false);
     }
-    load();
+
+    setClients(allClients);
+    setRegistrations(regMap);
+    setLoading(false);
   }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const filtered = clients.filter((c) => {
     if (search) {
@@ -68,6 +69,7 @@ export default function ClientsPage() {
   ];
 
   return (
+    <PullToRefresh onRefresh={loadData}>
     <div>
       <MobileHeader
         title="Clients"
@@ -123,11 +125,28 @@ export default function ClientsPage() {
             </div>
           ) : (
             filtered.map((client) => (
-              <ClientRow
+              <SwipeableRow
                 key={client.id}
-                client={client}
-                registration={registrations.get(client.id)}
-              />
+                rightActions={[
+                  ...(client.phone ? [{
+                    label: "Call",
+                    icon: <IconPhone size={18} />,
+                    color: "bg-sage-600",
+                    onAction: () => window.open(`tel:${client.phone}`),
+                  }] : []),
+                  {
+                    label: "Edit",
+                    icon: <IconEdit size={18} />,
+                    color: "bg-sky-600",
+                    onAction: () => router.push(`/clients/${client.id}/edit`),
+                  },
+                ]}
+              >
+                <ClientRow
+                  client={client}
+                  registration={registrations.get(client.id)}
+                />
+              </SwipeableRow>
             ))
           )}
         </div>
@@ -138,5 +157,6 @@ export default function ClientsPage() {
         <FAB onClick={() => router.push("/clients/new")} label="Add client" />
       </div>
     </div>
+    </PullToRefresh>
   );
 }

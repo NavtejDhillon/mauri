@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { db } from "@/lib/db/schema";
 import { checkAntenatalAlerts, checkPostnatalAlerts, checkOverdueVisit, type ClinicalAlert } from "@/lib/clinical/alerts";
 import { GestationBadge } from "@/components/clinical/gestation-badge";
 import { MobileHeader } from "@/components/ui/mobile-header";
 import { SkeletonCard } from "@/components/ui/skeleton";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { IconAlertTriangle, IconCalendar, IconClock } from "@/components/ui/icons";
 import type { Client, Registration, Appointment, AntenatalVisit, PostnatalVisit } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
@@ -36,8 +37,7 @@ export default function DashboardPage() {
     year: "numeric",
   });
 
-  useEffect(() => {
-    async function load() {
+  const loadData = useCallback(async () => {
       const clients = await db.clients.filter((c) => !c.deleted_at).toArray();
       const regs = await db.registrations.filter((r) => !r.deleted_at).toArray();
       const clientMap = new Map(clients.map((c) => [c.id, c]));
@@ -124,11 +124,12 @@ export default function DashboardPage() {
         .slice(0, 5);
 
       setData({ activeClients, weekVisits, upcomingAppointments, alertClients, recentVisits });
-    }
-    load();
   }, []);
 
+  useEffect(() => { loadData(); }, [loadData]);
+
   return (
+    <PullToRefresh onRefresh={loadData}>
     <div>
       <MobileHeader title={getGreeting()} />
       <p className="text-sm text-warm-400 -mt-3 mb-5 md:-mt-4 md:mb-6">{today}</p>
@@ -268,6 +269,7 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+    </PullToRefresh>
   );
 }
 
