@@ -147,6 +147,57 @@ input, select, textarea {
   animation: fade-in 0.2s ease-out;
 }
 
+/* ─── Typography scale ───────────────────────── */
+
+/* Mobile body text slightly larger for readability */
+p, span, dd, dt, li {
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  p, span, dd, dt, li {
+    line-height: 1.5;
+  }
+}
+
+/* ─── Touch micro-interactions ───────────────── */
+
+/* Press-down effect on tappable cards */
+.card-press {
+  transition: transform 100ms ease;
+}
+
+.card-press:active {
+  transform: scale(0.97);
+}
+
+/* Button press feedback */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Tappable rows and cards */
+[class*="active:bg-"] {
+  transition: background-color 100ms ease, transform 100ms ease;
+}
+
+/* ─── Smooth page transitions ────────────────── */
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main > div {
+  animation: page-enter 0.2s ease-out;
+}
+
 /* ─── Safe area spacing helpers ──────────────── */
 
 .safe-top {
@@ -155,4 +206,18 @@ input, select, textarea {
 
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ─── Selection and focus ────────────────────── */
+
+::selection {
+  background: var(--color-sage-200);
+  color: var(--color-sage-900);
+}
+
+/* Focus ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--color-sage-400);
+  outline-offset: 2px;
+  border-radius: var(--radius);
 }
