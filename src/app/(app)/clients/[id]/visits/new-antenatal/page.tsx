@@ -6,6 +6,7 @@ import { db } from "@/lib/db/schema";
 import { createAntenatalVisit } from "@/hooks/use-visits";
 import { calculateGestation } from "@/lib/clinical/gestation";
 import { checkAntenatalAlerts } from "@/lib/clinical/alerts";
+import { MobileHeader } from "@/components/ui/mobile-header";
 import type { Registration, AntenatalVisit, VisitType, Presentation, FetalMovements, UrineResult, Oedema } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
 
@@ -106,21 +107,13 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-warm-400 hover:text-warm-600 transition-colors duration-150 mb-2"
-        >
-          &larr; Back
-        </button>
-        <h1 className="text-[26px] font-semibold text-sage-900">New antenatal visit</h1>
-        {gestation && (
-          <p className="text-sm text-warm-400 mt-1">
-            Current gestation: <span className="font-mono font-medium text-sage-700">{gestation.display}</span>
-          </p>
-        )}
-      </div>
+    <div className="md:max-w-2xl">
+      <MobileHeader title="New antenatal visit" showBack />
+      {gestation && (
+        <p className="text-sm text-warm-400 -mt-2 mb-4">
+          Current gestation: <span className="font-mono font-medium text-sage-700">{gestation.display}</span>
+        </p>
+      )}
 
       {liveAlerts.length > 0 && (
         <div className="mb-4 space-y-2">
@@ -146,7 +139,7 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
       >
         {/* Visit details */}
         <Section title="Visit details">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Date" name="visit_date" type="date" defaultValue={today} required />
             <Field label="Time" name="visit_time" type="time" />
             <Select label="Visit type" name="visit_type" defaultValue="routine" options={[
@@ -162,7 +155,7 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Vitals */}
         <Section title="Vitals">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid grid-cols-2 gap-2">
               <Field label="BP systolic" name="bp_systolic" type="number" placeholder="120" />
               <Field label="BP diastolic" name="bp_diastolic" type="number" placeholder="80" />
@@ -175,7 +168,7 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Abdominal examination */}
         <Section title="Abdominal examination">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Fundal height (cm)" name="fundal_height_cm" type="number" />
             <Select label="Presentation" name="presentation" options={[
               { value: "", label: "Not assessed" },
@@ -198,7 +191,7 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Urinalysis */}
         <Section title="Urinalysis and oedema">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Select label="Protein" name="urine_protein" options={[
               { value: "", label: "Not tested" },
               { value: "nil", label: "Nil" },
@@ -227,11 +220,11 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Investigations */}
         <Section title="Investigations">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Hb result (g/L)" name="hb_result" type="number" />
             <Field label="Blood tests ordered" name="blood_tests_ordered" placeholder="FBC, Ferritin, etc." />
-            <div className="flex items-center gap-2 self-end pb-1">
-              <input type="checkbox" id="ultrasound_ordered" name="ultrasound_ordered" className="rounded" />
+            <div className="flex items-center gap-3 min-h-[44px]">
+              <input type="checkbox" id="ultrasound_ordered" name="ultrasound_ordered" className="w-5 h-5 rounded" />
               <label htmlFor="ultrasound_ordered" className="text-sm text-warm-600">Ultrasound ordered</label>
             </div>
             <Field label="Referrals made" name="referrals_made" placeholder="Obstetrician, physio, etc." />
@@ -249,7 +242,7 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Next visit */}
         <Section title="Next visit">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Next visit date" name="next_visit_date" type="date" />
             <Field label="Next visit gestation" name="next_visit_gestation" placeholder="34+0" className="font-mono" />
           </div>
@@ -257,7 +250,7 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Admin */}
         <Section title="Administration">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Duration (minutes)" name="duration_minutes" type="number" defaultValue="30" />
             <div className="space-y-3 self-center">
               <Checkbox label="After hours" name="after_hours" />
@@ -267,21 +260,17 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
           </div>
         </Section>
 
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-4 py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] hover:bg-warm-50 transition-colors duration-150"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 disabled:opacity-50 transition-colors duration-150"
-          >
-            {saving ? "Saving..." : "Save visit"}
-          </button>
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:static bg-warm-50 md:bg-transparent py-3 md:py-0 -mx-4 px-4 md:mx-0 md:px-0 border-t border-warm-200 md:border-0">
+          <div className="flex gap-3">
+            <button type="button" onClick={() => router.back()}
+              className="flex-1 md:flex-none px-4 py-3 md:py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] active:bg-warm-50 transition-colors duration-150">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex-1 md:flex-none px-6 py-3 md:py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] active:bg-sage-700 disabled:opacity-50 transition-colors duration-150">
+              {saving ? "Saving..." : "Save visit"}
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -289,10 +278,20 @@ export default function NewAntenatalVisitPage({ params }: { params: Promise<{ id
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
   return (
-    <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-      <h2 className="text-[15px] font-medium text-sage-900 mb-4">{title}</h2>
-      {children}
+    <section className="bg-white rounded-[14px] border border-warm-200">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full p-4 md:p-6 text-left"
+      >
+        <h2 className="text-[15px] font-medium text-sage-900">{title}</h2>
+        <svg className={`w-5 h-5 text-warm-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && <div className="px-4 pb-4 md:px-6 md:pb-6 -mt-1">{children}</div>}
     </section>
   );
 }
@@ -311,7 +310,7 @@ function Field({
       <input
         id={name} name={name} type={type} required={required}
         placeholder={placeholder} defaultValue={defaultValue} step={step}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       />
     </div>
   );
@@ -328,7 +327,7 @@ function Select({ label, name, options, defaultValue }: {
       </label>
       <select
         id={name} name={name} defaultValue={defaultValue}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -346,7 +345,7 @@ function TextArea({ label, name, placeholder }: { label: string; name: string; p
       </label>
       <textarea
         id={name} name={name} rows={3} placeholder={placeholder}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       />
     </div>
   );
@@ -354,8 +353,8 @@ function TextArea({ label, name, placeholder }: { label: string; name: string; p
 
 function Checkbox({ label, name, defaultChecked = false }: { label: string; name: string; defaultChecked?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <input type="checkbox" id={name} name={name} defaultChecked={defaultChecked} className="rounded" />
+    <div className="flex items-center gap-3 min-h-[44px]">
+      <input type="checkbox" id={name} name={name} defaultChecked={defaultChecked} className="w-5 h-5 rounded" />
       <label htmlFor={name} className="text-sm text-warm-600">{label}</label>
     </div>
   );

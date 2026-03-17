@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/db/schema";
 import { updateClient, updateRegistration } from "@/hooks/use-clients";
+import { MobileHeader } from "@/components/ui/mobile-header";
 import type { Client, Registration, EddMethod } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
 
@@ -82,84 +83,68 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
   if (!client) return <div className="text-sm text-coral-600">Client not found.</div>;
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-warm-400 hover:text-warm-600 transition-colors duration-150 mb-2"
-        >
-          &larr; Back
-        </button>
-        <h1 className="text-[26px] font-semibold text-sage-900">
-          Edit {client.preferred_name || client.first_name} {client.last_name}
-        </h1>
-      </div>
+    <div className="md:max-w-2xl">
+      <MobileHeader title={`Edit ${client.preferred_name || client.first_name} ${client.last_name}`} showBack />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Personal details */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-          <h2 className="text-[15px] font-medium text-sage-900 mb-4">Personal details</h2>
-          <div className="grid grid-cols-2 gap-4">
+        <Section title="Personal details">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="First name" name="first_name" defaultValue={client.first_name} required />
             <Field label="Last name" name="last_name" defaultValue={client.last_name} required />
             <Field label="Preferred name" name="preferred_name" defaultValue={client.preferred_name ?? ""} />
             <Field label="NHI" name="nhi" defaultValue={client.nhi ?? ""} placeholder="ABC1234" className="font-mono" />
             <Field label="Date of birth" name="date_of_birth" type="date" defaultValue={client.date_of_birth ?? ""} />
             <Field label="Phone" name="phone" type="tel" defaultValue={client.phone ?? ""} />
-            <Field label="Email" name="email" type="email" defaultValue={client.email ?? ""} className="col-span-2" />
+            <Field label="Email" name="email" type="email" defaultValue={client.email ?? ""} className="md:col-span-2" />
           </div>
-        </section>
+        </Section>
 
         {/* Address */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-          <h2 className="text-[15px] font-medium text-sage-900 mb-4">Address</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Address line 1" name="address_line_1" defaultValue={client.address_line_1 ?? ""} className="col-span-2" />
-            <Field label="Address line 2" name="address_line_2" defaultValue={client.address_line_2 ?? ""} className="col-span-2" />
+        <Section title="Address">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Field label="Address line 1" name="address_line_1" defaultValue={client.address_line_1 ?? ""} className="md:col-span-2" />
+            <Field label="Address line 2" name="address_line_2" defaultValue={client.address_line_2 ?? ""} className="md:col-span-2" />
             <Field label="City/Town" name="city" defaultValue={client.city ?? ""} />
             <Field label="Postcode" name="postcode" defaultValue={client.postcode ?? ""} />
           </div>
-        </section>
+        </Section>
 
         {/* Demographics */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-          <h2 className="text-[15px] font-medium text-sage-900 mb-4">Demographics</h2>
-          <div className="grid grid-cols-2 gap-4">
+        <Section title="Demographics">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Ethnicity" name="ethnicity" defaultValue={client.ethnicity?.[0] ?? ""} />
             <Field label="Iwi affiliation" name="iwi_affiliation" defaultValue={client.iwi_affiliation ?? ""} />
             <Field label="Language" name="language" defaultValue={client.language} />
-            <div className="flex items-center gap-2 self-end pb-1">
-              <input type="checkbox" id="interpreter_required" name="interpreter_required" className="rounded" defaultChecked={client.interpreter_required} />
+            <div className="flex items-center gap-3 min-h-[44px]">
+              <input type="checkbox" id="interpreter_required" name="interpreter_required" className="w-5 h-5 rounded" defaultChecked={client.interpreter_required} />
               <label htmlFor="interpreter_required" className="text-sm text-warm-600">Interpreter required</label>
             </div>
           </div>
-        </section>
+        </Section>
 
         {/* GP details */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-          <h2 className="text-[15px] font-medium text-sage-900 mb-4">GP details</h2>
-          <div className="grid grid-cols-2 gap-4">
+        <Section title="GP details">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="GP name" name="gp_name" defaultValue={client.gp_name ?? ""} />
             <Field label="GP practice" name="gp_practice" defaultValue={client.gp_practice ?? ""} />
             <Field label="GP phone" name="gp_phone" type="tel" defaultValue={client.gp_phone ?? ""} />
           </div>
-        </section>
+        </Section>
 
         {/* Emergency contact */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-          <h2 className="text-[15px] font-medium text-sage-900 mb-4">Emergency contact</h2>
-          <div className="grid grid-cols-2 gap-4">
+        <Section title="Emergency contact">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Name" name="emergency_contact_name" defaultValue={client.emergency_contact_name ?? ""} />
             <Field label="Phone" name="emergency_contact_phone" type="tel" defaultValue={client.emergency_contact_phone ?? ""} />
             <Field label="Relationship" name="emergency_contact_relationship" defaultValue={client.emergency_contact_relationship ?? ""} />
           </div>
-        </section>
+        </Section>
 
         {/* Registration / Pregnancy */}
         {registration && (
-          <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-            <h2 className="text-[15px] font-medium text-sage-900 mb-4">Pregnancy registration</h2>
-            <div className="grid grid-cols-2 gap-4">
+          <Section title="Pregnancy registration">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label="Agreed EDD" name="agreed_edd" type="date" defaultValue={registration.agreed_edd} />
               <div>
                 <label className="block text-xs font-medium text-warm-400 uppercase tracking-[0.05em] mb-1.5">
@@ -168,7 +153,7 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
                 <select
                   name="edd_method"
                   defaultValue={registration.edd_method ?? ""}
-                  className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+                  className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
                 >
                   <option value="">Select...</option>
                   <option value="ultrasound">Ultrasound</option>
@@ -179,39 +164,53 @@ export default function EditClientPage({ params }: { params: Promise<{ id: strin
               <Field label="Gravida" name="gravida" type="number" defaultValue={registration.gravida?.toString() ?? ""} />
               <Field label="Parity" name="parity" type="number" defaultValue={registration.parity?.toString() ?? ""} />
             </div>
-          </section>
+          </Section>
         )}
 
         {/* Notes */}
-        <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-          <h2 className="text-[15px] font-medium text-sage-900 mb-4">Notes</h2>
+        <Section title="Notes">
           <textarea
             name="notes"
             rows={3}
             defaultValue={client.notes ?? ""}
-            className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+            className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
             placeholder="Any additional notes..."
           />
-        </section>
+        </Section>
 
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-4 py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] hover:bg-warm-50 transition-colors duration-150"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 disabled:opacity-50 transition-colors duration-150"
-          >
-            {saving ? "Saving..." : "Save changes"}
-          </button>
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:static bg-warm-50 md:bg-transparent py-3 md:py-0 -mx-4 px-4 md:mx-0 md:px-0 border-t border-warm-200 md:border-0">
+          <div className="flex gap-3">
+            <button type="button" onClick={() => router.back()}
+              className="flex-1 md:flex-none px-4 py-3 md:py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] active:bg-warm-50 transition-colors duration-150">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex-1 md:flex-none px-6 py-3 md:py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] active:bg-sage-700 disabled:opacity-50 transition-colors duration-150">
+              {saving ? "Saving..." : "Save changes"}
+            </button>
+          </div>
         </div>
       </form>
     </div>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <section className="bg-white rounded-[14px] border border-warm-200">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full p-4 md:p-6 text-left"
+      >
+        <h2 className="text-[15px] font-medium text-sage-900">{title}</h2>
+        <svg className={`w-5 h-5 text-warm-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && <div className="px-4 pb-4 md:px-6 md:pb-6 -mt-1">{children}</div>}
+    </section>
   );
 }
 
@@ -229,7 +228,7 @@ function Field({
       <input
         id={name} name={name} type={type} required={required}
         placeholder={placeholder} defaultValue={defaultValue}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       />
     </div>
   );

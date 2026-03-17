@@ -4,6 +4,7 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/db/schema";
 import { createLabourBirth } from "@/hooks/use-visits";
+import { MobileHeader } from "@/components/ui/mobile-header";
 import type {
   Registration, LabourOnsetType, MembranesRuptureType, LiquorColour,
   BirthType, BirthLocationType, PerineumOutcome, PlacentaDelivery,
@@ -101,21 +102,13 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-warm-400 hover:text-warm-600 transition-colors duration-150 mb-2"
-        >
-          &larr; Back
-        </button>
-        <h1 className="text-[26px] font-semibold text-sage-900">Labour and birth record</h1>
-      </div>
+    <div className="md:max-w-2xl">
+      <MobileHeader title="Labour and birth record" showBack />
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Labour */}
         <Section title="Labour">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select label="Onset type" name="labour_onset_type" options={[
               { value: "", label: "Select..." },
               { value: "spontaneous", label: "Spontaneous" },
@@ -139,18 +132,18 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
               { value: "blood_stained", label: "Blood stained" },
             ]} />
             <Field label="Pain relief" name="pain_relief" placeholder="Entonox, water, epidural, etc." />
-            <div className="flex items-center gap-2 self-end pb-1">
-              <input type="checkbox" id="augmentation" name="augmentation" className="rounded" />
+            <div className="flex items-center gap-3 min-h-[44px]">
+              <input type="checkbox" id="augmentation" name="augmentation" className="w-5 h-5 rounded" />
               <label htmlFor="augmentation" className="text-sm text-warm-600">Augmentation</label>
             </div>
             <Field label="Augmentation method" name="augmentation_method" />
-            <Field label="Complications" name="complications_labour" placeholder="Comma-separated" className="col-span-2" />
+            <Field label="Complications" name="complications_labour" placeholder="Comma-separated" className="md:col-span-2" />
           </div>
         </Section>
 
         {/* Birth */}
         <Section title="Birth">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Birth date/time" name="birth_datetime" type="datetime-local" required />
             <div className="grid grid-cols-2 gap-2">
               <Field label="Gestation weeks" name="birth_gestation_weeks" type="number" />
@@ -178,7 +171,7 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
 
         {/* Perineum and placenta */}
         <Section title="Perineum and placenta">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select label="Perineum outcome" name="perineum_outcome" options={[
               { value: "", label: "Select..." },
               { value: "intact", label: "Intact" },
@@ -198,8 +191,8 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
               { value: "manual_removal", label: "Manual removal" },
             ]} />
             <Field label="Placenta delivery time" name="placenta_delivery_datetime" type="datetime-local" />
-            <div className="flex items-center gap-2 self-end pb-1">
-              <input type="checkbox" id="placenta_complete" name="placenta_complete" className="rounded" defaultChecked />
+            <div className="flex items-center gap-3 min-h-[44px]">
+              <input type="checkbox" id="placenta_complete" name="placenta_complete" className="w-5 h-5 rounded" defaultChecked />
               <label htmlFor="placenta_complete" className="text-sm text-warm-600">Placenta and membranes complete</label>
             </div>
             <Field label="Blood loss (ml)" name="blood_loss_ml" type="number" placeholder="300" />
@@ -214,7 +207,7 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
 
         {/* Baby */}
         <Section title="Baby">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select label="Gender" name="baby_gender" options={[
               { value: "", label: "Select..." },
               { value: "male", label: "Male" },
@@ -236,7 +229,7 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
 
         {/* Immediate postnatal */}
         <Section title="Immediate postnatal">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-3">
               <Checkbox label="Skin to skin" name="skin_to_skin" defaultChecked />
               <Checkbox label="Breastfeeding initiated" name="breastfeeding_initiated" />
@@ -263,14 +256,14 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
 
         {/* Other practitioners */}
         <Section title="Other details">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Abnormalities noted" name="abnormalities_noted" />
             <div className="space-y-3">
               <Checkbox label="Baby admitted to NICU" name="baby_admitted_nicu" />
             </div>
             <Field label="NICU reason" name="nicu_reason" />
             <Field label="Backup LMC" name="backup_lmc" />
-            <Field label="Other practitioners" name="other_practitioners" placeholder="Comma-separated" className="col-span-2" />
+            <Field label="Other practitioners" name="other_practitioners" placeholder="Comma-separated" className="md:col-span-2" />
           </div>
         </Section>
 
@@ -279,21 +272,17 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
           <TextArea label="Notes" name="notes" placeholder="Birth narrative, additional details..." />
         </Section>
 
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-4 py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] hover:bg-warm-50 transition-colors duration-150"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 disabled:opacity-50 transition-colors duration-150"
-          >
-            {saving ? "Saving..." : "Save record"}
-          </button>
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:static bg-warm-50 md:bg-transparent py-3 md:py-0 -mx-4 px-4 md:mx-0 md:px-0 border-t border-warm-200 md:border-0">
+          <div className="flex gap-3">
+            <button type="button" onClick={() => router.back()}
+              className="flex-1 md:flex-none px-4 py-3 md:py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] active:bg-warm-50 transition-colors duration-150">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex-1 md:flex-none px-6 py-3 md:py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] active:bg-sage-700 disabled:opacity-50 transition-colors duration-150">
+              {saving ? "Saving..." : "Save record"}
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -301,10 +290,20 @@ export default function LabourBirthPage({ params }: { params: Promise<{ id: stri
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
   return (
-    <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-      <h2 className="text-[15px] font-medium text-sage-900 mb-4">{title}</h2>
-      {children}
+    <section className="bg-white rounded-[14px] border border-warm-200">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full p-4 md:p-6 text-left"
+      >
+        <h2 className="text-[15px] font-medium text-sage-900">{title}</h2>
+        <svg className={`w-5 h-5 text-warm-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && <div className="px-4 pb-4 md:px-6 md:pb-6 -mt-1">{children}</div>}
     </section>
   );
 }
@@ -323,7 +322,7 @@ function Field({
       <input
         id={name} name={name} type={type} required={required}
         placeholder={placeholder} defaultValue={defaultValue} step={step}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       />
     </div>
   );
@@ -340,7 +339,7 @@ function Select({ label, name, options, defaultValue }: {
       </label>
       <select
         id={name} name={name} defaultValue={defaultValue}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -358,7 +357,7 @@ function TextArea({ label, name, placeholder }: { label: string; name: string; p
       </label>
       <textarea
         id={name} name={name} rows={4} placeholder={placeholder}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       />
     </div>
   );
@@ -366,8 +365,8 @@ function TextArea({ label, name, placeholder }: { label: string; name: string; p
 
 function Checkbox({ label, name, defaultChecked = false }: { label: string; name: string; defaultChecked?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <input type="checkbox" id={name} name={name} defaultChecked={defaultChecked} className="rounded" />
+    <div className="flex items-center gap-3 min-h-[44px]">
+      <input type="checkbox" id={name} name={name} defaultChecked={defaultChecked} className="w-5 h-5 rounded" />
       <label htmlFor={name} className="text-sm text-warm-600">{label}</label>
     </div>
   );

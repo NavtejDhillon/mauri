@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { db } from "@/lib/db/schema";
 import { createPostnatalVisit } from "@/hooks/use-visits";
 import { checkPostnatalAlerts } from "@/lib/clinical/alerts";
+import { MobileHeader } from "@/components/ui/mobile-header";
 import type {
   Registration, PostnatalVisit, VisitType, Lochia, PerineumWound,
   FeedingType, JaundiceAssessment, CordStatus, HearingTest, MetabolicScreen, RedEyeTest,
@@ -115,16 +116,8 @@ export default function NewPostnatalVisitPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="max-w-2xl">
-      <div className="mb-6">
-        <button
-          onClick={() => router.back()}
-          className="text-sm text-warm-400 hover:text-warm-600 transition-colors duration-150 mb-2"
-        >
-          &larr; Back
-        </button>
-        <h1 className="text-[26px] font-semibold text-sage-900">New postnatal visit</h1>
-      </div>
+    <div className="md:max-w-2xl">
+      <MobileHeader title="New postnatal visit" showBack />
 
       {liveAlerts.length > 0 && (
         <div className="mb-4 space-y-2">
@@ -150,7 +143,7 @@ export default function NewPostnatalVisitPage({ params }: { params: Promise<{ id
       >
         {/* Visit details */}
         <Section title="Visit details">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Date" name="visit_date" type="date" defaultValue={today} required />
             <Field label="Time" name="visit_time" type="time" />
             <Select label="Visit type" name="visit_type" defaultValue="routine" options={[
@@ -167,7 +160,7 @@ export default function NewPostnatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Maternal assessment */}
         <Section title="Maternal assessment">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="grid grid-cols-2 gap-2">
               <Field label="BP systolic" name="maternal_bp_systolic" type="number" placeholder="120" />
               <Field label="BP diastolic" name="maternal_bp_diastolic" type="number" placeholder="80" />
@@ -197,16 +190,16 @@ export default function NewPostnatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Mental health */}
         <Section title="Mental health">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Maternal mood" name="maternal_mood" placeholder="Well, anxious, tearful..." />
             <Field label="Edinburgh PND score" name="edinburgh_pnd_score" type="number" placeholder="0-30" />
-            <TextArea label="Maternal concerns" name="maternal_concerns" className="col-span-2" />
+            <TextArea label="Maternal concerns" name="maternal_concerns" className="md:col-span-2" />
           </div>
         </Section>
 
         {/* Baby assessment */}
         <Section title="Baby assessment">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Baby weight (g)" name="baby_weight_g" type="number" placeholder="3500" />
             <Field label="Weight change" name="baby_weight_change" placeholder="+50g, -3%, etc." />
             <Select label="Feeding type" name="feeding_type" options={[
@@ -241,7 +234,7 @@ export default function NewPostnatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Newborn screening */}
         <Section title="Newborn screening">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Select label="Hearing test" name="hearing_test" options={[
               { value: "", label: "Not done" },
               { value: "pass", label: "Pass" },
@@ -284,7 +277,7 @@ export default function NewPostnatalVisitPage({ params }: { params: Promise<{ id
 
         {/* Admin */}
         <Section title="Administration">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Field label="Duration (minutes)" name="duration_minutes" type="number" defaultValue="45" />
             <div className="space-y-3 self-center">
               <Checkbox label="After hours" name="after_hours" />
@@ -293,21 +286,17 @@ export default function NewPostnatalVisitPage({ params }: { params: Promise<{ id
           </div>
         </Section>
 
-        <div className="flex justify-end gap-3">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="px-4 py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] hover:bg-warm-50 transition-colors duration-150"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700 disabled:opacity-50 transition-colors duration-150"
-          >
-            {saving ? "Saving..." : "Save visit"}
-          </button>
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:static bg-warm-50 md:bg-transparent py-3 md:py-0 -mx-4 px-4 md:mx-0 md:px-0 border-t border-warm-200 md:border-0">
+          <div className="flex gap-3">
+            <button type="button" onClick={() => router.back()}
+              className="flex-1 md:flex-none px-4 py-3 md:py-2 text-sm font-medium text-warm-600 bg-white border border-warm-200 rounded-[10px] active:bg-warm-50 transition-colors duration-150">
+              Cancel
+            </button>
+            <button type="submit" disabled={saving}
+              className="flex-1 md:flex-none px-6 py-3 md:py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] active:bg-sage-700 disabled:opacity-50 transition-colors duration-150">
+              {saving ? "Saving..." : "Save visit"}
+            </button>
+          </div>
         </div>
       </form>
     </div>
@@ -315,10 +304,20 @@ export default function NewPostnatalVisitPage({ params }: { params: Promise<{ id
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = useState(true);
   return (
-    <section className="bg-white rounded-[14px] border border-warm-200 p-6">
-      <h2 className="text-[15px] font-medium text-sage-900 mb-4">{title}</h2>
-      {children}
+    <section className="bg-white rounded-[14px] border border-warm-200">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full p-4 md:p-6 text-left"
+      >
+        <h2 className="text-[15px] font-medium text-sage-900">{title}</h2>
+        <svg className={`w-5 h-5 text-warm-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && <div className="px-4 pb-4 md:px-6 md:pb-6 -mt-1">{children}</div>}
     </section>
   );
 }
@@ -337,7 +336,7 @@ function Field({
       <input
         id={name} name={name} type={type} required={required}
         placeholder={placeholder} defaultValue={defaultValue} step={step}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       />
     </div>
   );
@@ -354,7 +353,7 @@ function Select({ label, name, options, defaultValue }: {
       </label>
       <select
         id={name} name={name} defaultValue={defaultValue}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -372,7 +371,7 @@ function TextArea({ label, name, placeholder, className = "" }: { label: string;
       </label>
       <textarea
         id={name} name={name} rows={3} placeholder={placeholder}
-        className="w-full px-3 py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
+        className="w-full px-3 py-3 md:py-2 text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400 transition-colors duration-150"
       />
     </div>
   );
@@ -380,8 +379,8 @@ function TextArea({ label, name, placeholder, className = "" }: { label: string;
 
 function Checkbox({ label, name, defaultChecked = false }: { label: string; name: string; defaultChecked?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <input type="checkbox" id={name} name={name} defaultChecked={defaultChecked} className="rounded" />
+    <div className="flex items-center gap-3 min-h-[44px]">
+      <input type="checkbox" id={name} name={name} defaultChecked={defaultChecked} className="w-5 h-5 rounded" />
       <label htmlFor={name} className="text-sm text-warm-600">{label}</label>
     </div>
   );
