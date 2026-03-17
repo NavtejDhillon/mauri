@@ -107,6 +107,13 @@ export async function deleteClient(id: string): Promise<void> {
   return localDelete("clients", id);
 }
 
+export async function updateRegistration(
+  id: string,
+  changes: Partial<Registration>
+): Promise<void> {
+  return localUpdate("registrations", id, changes);
+}
+
 export async function createRegistration(
   data: Omit<Registration, "id" | "created_at" | "updated_at" | "deleted_at" | "sync_version">
 ): Promise<Registration> {

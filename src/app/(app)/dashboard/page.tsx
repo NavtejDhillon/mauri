@@ -1,4 +1,31 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { db } from "@/lib/db/schema";
+import { checkAntenatalAlerts, checkPostnatalAlerts, checkOverdueVisit, type ClinicalAlert } from "@/lib/clinical/alerts";
+import { GestationBadge } from "@/components/clinical/gestation-badge";
+import type { Client, Registration, Appointment, AntenatalVisit, PostnatalVisit } from "@/lib/supabase/types";
+import type { SyncableRecord } from "@/lib/db/schema";
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+interface DashboardData {
+  activeClients: number;
+  weekVisits: number;
+  upcomingAppointments: (Appointment & SyncableRecord & { client?: Client })[];
+  alertClients: { client: Client; registration: Registration; alerts: ClinicalAlert[] }[];
+  recentVisits: { type: string; clientName: string; date: string; clientId: string }[];
+}
+
 export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+
   const today = new Date().toLocaleDateString("en-NZ", {
     weekday: "long",
     day: "numeric",
@@ -6,39 +33,235 @@ export default function DashboardPage() {
     year: "numeric",
   });
 
+  useEffect(() => {
+    async function load() {
+      const clients = await db.clients.filter((c) => !c.deleted_at).toArray();
+      const regs = await db.registrations.filter((r) => !r.deleted_at).toArray();
+      const clientMap = new Map(clients.map((c) => [c.id, c]));
+
+      // Active clients
+      const activeRegs = regs.filter((r) => r.status === "active" || r.status === "postnatal");
+      const activeClients = new Set(activeRegs.map((r) => r.client_id)).size;
+
+      // This week's visits
+      const now = new Date();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay() + 1); // Monday
+      weekStart.setHours(0, 0, 0, 0);
+      const weekStartStr = weekStart.toISOString().split("T")[0];
+
+      const anVisits = await db.antenatalVisits.filter((v) => !v.deleted_at && v.visit_date >= weekStartStr).toArray();
+      const pnVisits = await db.postnatalVisits.filter((v) => !v.deleted_at && v.visit_date >= weekStartStr).toArray();
+      const weekVisits = anVisits.length + pnVisits.length;
+
+      // Upcoming appointments (next 5)
+      const nowStr = new Date().toISOString();
+      const allAppts = await db.appointments
+        .filter((a) => !a.deleted_at && a.appointment_datetime >= nowStr && a.status !== "cancelled")
+        .toArray();
+      const upcomingAppointments = allAppts
+        .sort((a, b) => a.appointment_datetime.localeCompare(b.appointment_datetime))
+        .slice(0, 5)
+        .map((apt) => ({ ...apt, client: apt.client_id ? clientMap.get(apt.client_id) ?? undefined : undefined }));
+
+      // Clients needing attention (alerts from latest visits)
+      const alertClients: DashboardData["alertClients"] = [];
+      for (const reg of activeRegs) {
+        const client = clientMap.get(reg.client_id);
+        if (!client) continue;
+
+        const alerts: ClinicalAlert[] = [];
+
+        const latestAN = await db.antenatalVisits
+          .where("registration_id").equals(reg.id)
+          .filter((v) => !v.deleted_at)
+          .toArray();
+        latestAN.sort((a, b) => b.visit_date.localeCompare(a.visit_date));
+        if (latestAN[0]) alerts.push(...checkAntenatalAlerts(latestAN[0]));
+
+        const latestPN = await db.postnatalVisits
+          .where("registration_id").equals(reg.id)
+          .filter((v) => !v.deleted_at)
+          .toArray();
+        latestPN.sort((a, b) => b.visit_date.localeCompare(a.visit_date));
+        if (latestPN[0]) alerts.push(...checkPostnatalAlerts(latestPN[0]));
+
+        const lastDate = latestPN[0]?.visit_date ?? latestAN[0]?.visit_date ?? null;
+        const overdueAlert = checkOverdueVisit(reg, lastDate);
+        if (overdueAlert) alerts.push(overdueAlert);
+
+        if (alerts.length > 0) {
+          alertClients.push({ client, registration: reg, alerts });
+        }
+      }
+
+      // Recent visits (last 5)
+      const allAN = await db.antenatalVisits.filter((v) => !v.deleted_at).toArray();
+      const allPN = await db.postnatalVisits.filter((v) => !v.deleted_at).toArray();
+
+      const regMap = new Map(regs.map((r) => [r.id, r]));
+      const recentVisits = [
+        ...allAN.map((v) => {
+          const reg = regMap.get(v.registration_id);
+          const c = reg ? clientMap.get(reg.client_id) : undefined;
+          return {
+            type: "Antenatal",
+            clientName: c ? `${c.preferred_name || c.first_name} ${c.last_name}` : "Unknown",
+            date: v.visit_date,
+            clientId: reg?.client_id || "",
+          };
+        }),
+        ...allPN.map((v) => {
+          const reg = regMap.get(v.registration_id);
+          const c = reg ? clientMap.get(reg.client_id) : undefined;
+          return {
+            type: "Postnatal",
+            clientName: c ? `${c.preferred_name || c.first_name} ${c.last_name}` : "Unknown",
+            date: v.visit_date,
+            clientId: reg?.client_id || "",
+          };
+        }),
+      ]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 5);
+
+      setData({ activeClients, weekVisits, upcomingAppointments, alertClients, recentVisits });
+    }
+    load();
+  }, []);
+
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-[26px] font-semibold text-sage-900">Good morning</h1>
+        <h1 className="text-[26px] font-semibold text-sage-900">{getGreeting()}</h1>
         <p className="text-sm text-warm-400 mt-0.5">{today}</p>
       </div>
 
+      {/* Metric cards */}
       <div className="grid grid-cols-4 gap-4 mb-6">
-        {[
-          { label: "Active clients", value: "0" },
-          { label: "This week's visits", value: "0" },
-          { label: "Pending claims", value: "$0" },
-          { label: "RPaTS this month", value: "$0" },
-        ].map((metric) => (
-          <div
-            key={metric.label}
-            className="bg-warm-50 rounded-[14px] p-4"
-          >
-            <p className="text-xs font-medium text-warm-400 uppercase tracking-[0.05em]">
-              {metric.label}
-            </p>
-            <p className="text-2xl font-semibold text-sage-900 mt-1">
-              {metric.value}
-            </p>
-          </div>
-        ))}
+        <MetricCard label="Active clients" value={data?.activeClients?.toString() ?? "-"} />
+        <MetricCard label="This week's visits" value={data?.weekVisits?.toString() ?? "-"} />
+        <MetricCard label="Upcoming appointments" value={data?.upcomingAppointments?.length?.toString() ?? "-"} />
+        <MetricCard label="Clients with alerts" value={data?.alertClients?.length?.toString() ?? "-"} />
       </div>
 
-      <div className="bg-white rounded-[14px] border border-warm-200 p-6">
-        <p className="text-sm text-warm-400">
-          Welcome to Mauri. Start by adding your first client.
-        </p>
+      <div className="grid grid-cols-2 gap-4">
+        {/* Upcoming appointments */}
+        <div className="bg-white rounded-[14px] border border-warm-200 p-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[15px] font-medium text-sage-900">Upcoming appointments</h3>
+            <Link href="/calendar" className="text-xs text-sage-600 hover:text-sage-800">View all</Link>
+          </div>
+          {!data || data.upcomingAppointments.length === 0 ? (
+            <p className="text-sm text-warm-400">No upcoming appointments.</p>
+          ) : (
+            <div className="space-y-2">
+              {data.upcomingAppointments.map((apt) => (
+                <div key={apt.id} className="flex items-center justify-between py-2 border-b border-warm-100 last:border-b-0">
+                  <div>
+                    <p className="text-sm font-medium text-sage-900">
+                      {apt.client ? `${apt.client.preferred_name || apt.client.first_name} ${apt.client.last_name}` : "No client"}
+                    </p>
+                    <p className="text-xs text-warm-400">
+                      {apt.appointment_type?.replace(/_/g, " ")}
+                      {apt.location && ` · ${apt.location}`}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-mono text-warm-600">
+                      {new Date(apt.appointment_datetime).toLocaleDateString("en-NZ", { day: "numeric", month: "short" })}
+                    </p>
+                    <p className="text-xs font-mono text-warm-400">
+                      {new Date(apt.appointment_datetime).toLocaleTimeString("en-NZ", { hour: "2-digit", minute: "2-digit", hour12: false })}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Clients needing attention */}
+        <div className="bg-white rounded-[14px] border border-warm-200 p-6">
+          <h3 className="text-[15px] font-medium text-sage-900 mb-3">Needs attention</h3>
+          {!data || data.alertClients.length === 0 ? (
+            <p className="text-sm text-warm-400">No alerts. All clients are doing well.</p>
+          ) : (
+            <div className="space-y-3">
+              {data.alertClients.slice(0, 5).map(({ client, registration, alerts }) => (
+                <Link
+                  key={client.id}
+                  href={`/clients/${client.id}`}
+                  className="block py-2 border-b border-warm-100 last:border-b-0 hover:bg-warm-50 -mx-2 px-2 rounded-lg transition-colors duration-150"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-sage-900">
+                        {client.preferred_name || client.first_name} {client.last_name}
+                      </p>
+                      {registration.agreed_edd && registration.status === "active" && (
+                        <GestationBadge edd={registration.agreed_edd} />
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {alerts.map((alert, i) => (
+                      <span
+                        key={i}
+                        className={`inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full ${
+                          alert.level === "urgent"
+                            ? "bg-coral-50 text-coral-700"
+                            : "bg-amber-50 text-amber-700"
+                        }`}
+                      >
+                        {alert.category}
+                      </span>
+                    ))}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Recent visits */}
+        <div className="bg-white rounded-[14px] border border-warm-200 p-6 col-span-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-[15px] font-medium text-sage-900">Recent visits</h3>
+            <Link href="/clients" className="text-xs text-sage-600 hover:text-sage-800">View all clients</Link>
+          </div>
+          {!data || data.recentVisits.length === 0 ? (
+            <p className="text-sm text-warm-400">No visits recorded yet. Start by adding a client and recording a visit.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {data.recentVisits.map((visit, i) => (
+                <Link
+                  key={i}
+                  href={`/clients/${visit.clientId}`}
+                  className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-warm-50 transition-colors duration-150"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-sage-900">{visit.clientName}</p>
+                    <p className="text-xs text-warm-400">{visit.type} visit</p>
+                  </div>
+                  <p className="text-xs font-mono text-warm-400">
+                    {new Date(visit.date).toLocaleDateString("en-NZ", { day: "numeric", month: "short" })}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-warm-50 rounded-[14px] p-4">
+      <p className="text-xs font-medium text-warm-400 uppercase tracking-[0.05em]">{label}</p>
+      <p className="text-2xl font-semibold text-sage-900 mt-1">{value}</p>
     </div>
   );
 }

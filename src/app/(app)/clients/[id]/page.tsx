@@ -4,7 +4,9 @@ import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/db/schema";
 import { GestationBadge } from "@/components/clinical/gestation-badge";
-import type { Client, Registration, MaternalHistory, AntenatalVisit, PostnatalVisit } from "@/lib/supabase/types";
+import { ClinicalSummary } from "@/components/clinical/clinical-summary";
+import { VisitTimeline } from "@/components/clinical/visit-timeline";
+import type { Client, Registration, MaternalHistory, AntenatalVisit, PostnatalVisit, LabourBirth } from "@/lib/supabase/types";
 import type { SyncableRecord } from "@/lib/db/schema";
 
 type Tab = "overview" | "visits" | "history" | "claims" | "documents";
@@ -17,6 +19,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
   const [maternalHistory, setMaternalHistory] = useState<(MaternalHistory & SyncableRecord) | null>(null);
   const [anVisits, setAnVisits] = useState<(AntenatalVisit & SyncableRecord)[]>([]);
   const [pnVisits, setPnVisits] = useState<(PostnatalVisit & SyncableRecord)[]>([]);
+  const [labourBirth, setLabourBirth] = useState<(LabourBirth & SyncableRecord) | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [loading, setLoading] = useState(true);
 
@@ -50,6 +53,11 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             .filter((v) => !v.deleted_at)
             .toArray();
           setPnVisits(pn.sort((a, b) => b.visit_date.localeCompare(a.visit_date)));
+
+          const lb = await db.labourBirths
+            .where("registration_id").equals(active.id)
+            .toArray();
+          setLabourBirth(lb[0] ?? null);
         }
       }
       setLoading(false);
@@ -90,6 +98,12 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-[26px] font-semibold text-sage-900">{displayName}</h1>
+              <a
+                href={`/clients/${id}/edit`}
+                className="px-3 py-1 text-xs font-medium text-sage-600 bg-sage-50 border border-sage-100 rounded-full hover:bg-sage-100 transition-colors duration-150"
+              >
+                Edit
+              </a>
               {registration?.agreed_edd && registration.status === "active" && (
                 <GestationBadge edd={registration.agreed_edd} />
               )}
@@ -133,10 +147,10 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
 
       {/* Tab content */}
       {activeTab === "overview" && (
-        <OverviewTab client={client} registration={registration} maternalHistory={maternalHistory} />
+        <OverviewTab client={client} registration={registration} maternalHistory={maternalHistory} anVisits={anVisits} pnVisits={pnVisits} labourBirth={labourBirth} />
       )}
       {activeTab === "visits" && (
-        <VisitsTab registration={registration} anVisits={anVisits} pnVisits={pnVisits} clientId={id} />
+        <VisitsTab registration={registration} anVisits={anVisits} pnVisits={pnVisits} labourBirth={labourBirth} clientId={id} />
       )}
       {activeTab === "history" && (
         <HistoryTab maternalHistory={maternalHistory} clientId={id} />
@@ -159,13 +173,28 @@ function OverviewTab({
   client,
   registration,
   maternalHistory,
+  anVisits,
+  pnVisits,
+  labourBirth,
 }: {
   client: Client;
   registration: (Registration & SyncableRecord) | null;
   maternalHistory: (MaternalHistory & SyncableRecord) | null;
+  anVisits: AntenatalVisit[];
+  pnVisits: PostnatalVisit[];
+  labourBirth: LabourBirth | null;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-4">
+      {registration && (
+        <ClinicalSummary
+          registration={registration}
+          anVisits={anVisits}
+          pnVisits={pnVisits}
+          labourBirth={labourBirth}
+        />
+      )}
+      <div className="grid grid-cols-2 gap-4">
       <div className="bg-white rounded-[14px] border border-warm-200 p-6">
         <h3 className="text-[15px] font-medium text-sage-900 mb-3">Contact</h3>
         <dl className="space-y-2 text-sm">
@@ -206,6 +235,7 @@ function OverviewTab({
         </dl>
       </div>
     </div>
+    </div>
   );
 }
 
@@ -213,18 +243,15 @@ function VisitsTab({
   registration,
   anVisits,
   pnVisits,
+  labourBirth,
   clientId,
 }: {
   registration: (Registration & SyncableRecord) | null;
   anVisits: (AntenatalVisit & SyncableRecord)[];
   pnVisits: (PostnatalVisit & SyncableRecord)[];
+  labourBirth: LabourBirth | null;
   clientId: string;
 }) {
-  const allVisits = [
-    ...anVisits.map((v) => ({ ...v, type: "antenatal" as const })),
-    ...pnVisits.map((v) => ({ ...v, type: "postnatal" as const })),
-  ].sort((a, b) => b.visit_date.localeCompare(a.visit_date));
-
   return (
     <div>
       {registration && (
@@ -241,44 +268,23 @@ function VisitsTab({
           >
             New postnatal visit
           </a>
+          {!labourBirth && (
+            <a
+              href={`/clients/${clientId}/labour-birth`}
+              className="px-4 py-2 text-sm font-medium text-plum-600 bg-plum-50 border border-plum-100 rounded-[10px] hover:bg-plum-100 transition-colors duration-150"
+            >
+              Record birth
+            </a>
+          )}
         </div>
       )}
 
-      <div className="bg-white rounded-[14px] border border-warm-200 overflow-hidden">
-        {allVisits.length === 0 ? (
-          <div className="p-6 text-sm text-warm-400">No visits recorded yet.</div>
-        ) : (
-          allVisits.map((visit) => (
-            <div key={visit.id} className="flex items-center justify-between px-4 py-3 border-b border-warm-200 last:border-b-0">
-              <div>
-                <p className="text-sm font-medium text-sage-900">
-                  {visit.type === "antenatal" ? "Antenatal" : "Postnatal"} visit
-                </p>
-                <p className="text-xs text-warm-400">
-                  {new Date(visit.visit_date).toLocaleDateString("en-NZ", { day: "numeric", month: "short", year: "numeric" })}
-                  {visit.type === "antenatal" && "gestation_weeks" in visit && visit.gestation_weeks != null && (
-                    <> · <span className="font-mono">{visit.gestation_weeks}+{visit.gestation_days ?? 0}</span></>
-                  )}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-xs">
-                {visit.type === "antenatal" && "bp_systolic" in visit && visit.bp_systolic && (
-                  <span className="font-mono text-warm-600">
-                    {visit.bp_systolic}/{visit.bp_diastolic}
-                  </span>
-                )}
-                <span className={`px-2 py-0.5 rounded-full border ${
-                  visit.type === "antenatal"
-                    ? "bg-sage-50 text-sage-800 border-sage-100"
-                    : "bg-sky-50 text-sky-800 border-sky-100"
-                }`}>
-                  {visit.visit_type}
-                </span>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      <VisitTimeline
+        anVisits={anVisits}
+        pnVisits={pnVisits}
+        labourBirth={labourBirth}
+        clientId={clientId}
+      />
     </div>
   );
 }
