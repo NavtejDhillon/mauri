@@ -10,7 +10,8 @@
     "db:test": "bash scripts/db/test.sh",
     "db:test:down": "bash scripts/db/test-down.sh",
     "db:audit": "tsx scripts/db/security-audit.ts",
-    "db:audit:test": "node --env-file-if-exists=.env.db-test --import tsx scripts/db/security-audit.ts"
+    "db:audit:test": "node --env-file-if-exists=.env.db-test --import tsx scripts/db/security-audit.ts",
+    "db:migrate": "bash scripts/db/migrate.sh"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",
