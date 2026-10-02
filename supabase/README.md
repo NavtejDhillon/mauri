@@ -1,7 +1,7 @@
 # Database
 
 - `migrations/`: numbered SQL files applied in order. Source of truth for the schema. Never edit an applied migration; add a new one.
-- `tests/`: pgTAP tests. `00_helpers.sql` is applied first and provides `tests.create_user`, `tests.login_user`, `tests.anon`, `tests.admin`.
+- `tests/`: pgTAP tests. `gotrue_auth_functions.sql` is applied before the migrations and installs `auth.jwt()` and `auth.uid()` exactly as the auth service does in a running stack (the test container has no auth service). `00_helpers.sql` is applied after the migrations and provides `tests.create_user`, `tests.login_user`, `tests.anon`, `tests.admin`.
 
 Run locally:
 

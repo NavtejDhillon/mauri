@@ -3,6 +3,10 @@
 create extension if not exists pgtap;
 create schema if not exists tests;
 
+-- Tests switch role with tests.login_user and then call helpers again while
+-- still acting as that role, so the app roles need to reach the schema.
+grant usage on schema tests to authenticated, anon;
+
 create or replace function tests.create_user(p_email text) returns uuid
 language plpgsql as $$
 declare v_id uuid := gen_random_uuid();

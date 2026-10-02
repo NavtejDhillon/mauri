@@ -53,6 +53,9 @@ fi
 psql_admin -d postgres -c "drop database if exists $DB" >/dev/null
 psql_admin -d postgres -c "create database $DB template $TEMPLATE" >/dev/null
 
+# The auth service normally installs these; the test container has no auth service.
+psql_admin -d "$DB" < "$ROOT/supabase/tests/gotrue_auth_functions.sql"
+
 shopt -s nullglob
 for f in "$ROOT"/supabase/migrations/*.sql; do
   echo "migration: $(basename "$f")"
