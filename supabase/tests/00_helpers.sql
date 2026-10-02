@@ -1,6 +1,8 @@
 -- Test-only helpers. Applied by scripts/db/test.sh after the migrations.
 -- Never part of a migration.
-create extension if not exists pgtap;
+create extension if not exists pgtap with schema extensions;
+-- Test-only: platform_admin has no USAGE on extensions by default, and the tests call pgTAP as that role.
+grant usage on schema extensions to platform_admin;
 create schema if not exists tests;
 
 -- Tests switch role with tests.login_user and then call helpers again while
