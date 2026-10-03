@@ -1,7 +1,9 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { completeEnrolment, startEnrolment, type EnrolmentStart } from "./actions";
+import { completeEnrolment } from "./complete-enrolment";
+import type { EnrolmentStart } from "./enrolment-start";
+import { startEnrolment } from "./start-enrolment";
 import { FormField } from "@/components/ui/form-field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

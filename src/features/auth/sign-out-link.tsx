@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { signOutHere } from "./actions";
+import { signOutHere } from "./sign-out-here";
 import { FormMessage } from "@/components/ui/form-message";
 
 function LinkButton() {

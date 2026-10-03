@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { signOut } from "./actions";
+import { signOut } from "./sign-out";
 import { FormMessage } from "@/components/ui/form-message";
 
 function Button() {

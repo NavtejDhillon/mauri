@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { signIn } from "./actions";
+import { signIn } from "./sign-in";
 import { FormField } from "@/components/ui/form-field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";

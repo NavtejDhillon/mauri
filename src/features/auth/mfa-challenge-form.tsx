@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { verifyMfa } from "./actions";
+import { verifyMfa } from "./verify-mfa";
 import { FormField } from "@/components/ui/form-field";
 import { FormMessage } from "@/components/ui/form-message";
 import { SubmitButton } from "@/components/ui/submit-button";
