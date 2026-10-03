@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { giveCover } from "./actions";
+import { giveCover } from "./give-cover";
 import { ColleagueSearch } from "./colleague-search";
 import { FormField } from "@/components/ui/form-field";
 import { FormMessage } from "@/components/ui/form-message";

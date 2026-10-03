@@ -5,8 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/action-result";
 import { userMessage } from "@/lib/user-message";
 import { readyForAction } from "@/features/auth/ready-for-action";
-
-export type SaveResult = ActionResult | { saved: true; values: Record<string, string> };
+import type { SaveResult } from "./save-result";
 
 export async function saveProfile(_prev: SaveResult, formData: FormData): Promise<SaveResult> {
   const values = {

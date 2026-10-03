@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { revokeCover } from "./actions";
+import { revokeCover } from "./revoke-cover";
 import { FormMessage } from "@/components/ui/form-message";
 
 const button = "min-h-11 min-w-11 px-4 py-2 whitespace-nowrap text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed";

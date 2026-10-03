@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveProfile } from "./actions";
+import { saveProfile } from "./save-profile";
 import type { Profile } from "./queries";
 import { FormField } from "@/components/ui/form-field";
 import { FormMessage } from "@/components/ui/form-message";
