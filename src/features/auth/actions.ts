@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import type { ActionResult } from "@/lib/action-result";
 import { clientIp } from "@/lib/client-ip";
 import { abandonSession } from "./abandon-session";
 import { attemptLimiter } from "./attempt-limiter";
@@ -12,27 +13,27 @@ import { serviceProblem } from "./service-problem";
 import { tooManyAttempts } from "./too-many-attempts";
 import { verifyCode } from "./verify-code";
 
-export type ActionResult = { error: string } | null;
-
 export async function signIn(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!email || !password) return { error: "Enter your email and password." };
+  // The email comes back so the form can show it again; the password never does.
+  const fail = (error: string): ActionResult => ({ error, values: { email } });
+  if (!email || !password) return fail("Enter your email and password.");
   const supabase = await createClient();
   const limiter = attemptLimiter(supabase, "password", email, clientIp(await headers()));
   const allowed = await limiter.allowed();
-  if (allowed === null) return { error: serviceProblem };
-  if (!allowed) return { error: tooManyAttempts };
+  if (allowed === null) return fail(serviceProblem);
+  if (!allowed) return fail(tooManyAttempts);
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const failure = describeAuthFailure("password", error);
     if (!failure.counts) console.error("signIn: signInWithPassword failed", error);
-    if (failure.counts && !(await limiter.record(false))) return { error: serviceProblem };
-    return { error: failure.message };
+    if (failure.counts && !(await limiter.record(false))) return fail(serviceProblem);
+    return fail(failure.message);
   }
   // Same client, so this call carries the new session, which the database requires to record a success.
-  if (!(await limiter.record(true))) return { error: await abandonSession(supabase, "signIn: could not record a successful sign-in") };
+  if (!(await limiter.record(true))) return fail(await abandonSession(supabase, "signIn: could not record a successful sign-in"));
   redirect("/");
 }
 

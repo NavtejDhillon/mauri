@@ -3,7 +3,7 @@
 import { isAuthApiError } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { ActionResult } from "@/features/auth/actions";
+import type { ActionResult } from "@/lib/action-result";
 import { serviceProblem } from "@/features/auth/service-problem";
 
 // Exchanges the one-time token in an invite link for a session. Runs only when the person
