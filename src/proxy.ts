@@ -66,6 +66,9 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+// Static files skip the proxy. /sw.js must: a signed-out device checking for a service
+// worker update would otherwise be redirected to /login, the check would fail and the old
+// worker would stay installed.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icons|manifest.json).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.json|sw.js).*)"],
 };

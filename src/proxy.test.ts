@@ -17,7 +17,7 @@ vi.mock("@supabase/ssr", () => ({
   }),
 }));
 
-const { proxy } = await import("./proxy");
+const { proxy, config } = await import("./proxy");
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 function get(path: string, headers: Record<string, string> = {}) {
@@ -74,5 +74,14 @@ describe("proxy", () => {
     const res = await proxy(get("/clients", { cookie: "sb-x-auth-token=old" }));
     expect(res.headers.get("x-middleware-request-cookie")).toContain("sb-x-auth-token=new");
     expect(res.headers.get("set-cookie")).toContain("sb-x-auth-token=new");
+  });
+
+  it("does not run for the service worker or static files, only for pages", () => {
+    const runs = (path: string) => new RegExp(`^${config.matcher[0]}$`).test(path);
+    expect(runs("/sw.js")).toBe(false);
+    expect(runs("/_next/static/chunks/app.js")).toBe(false);
+    expect(runs("/manifest.json")).toBe(false);
+    expect(runs("/clients")).toBe(true);
+    expect(runs("/login")).toBe(true);
   });
 });
