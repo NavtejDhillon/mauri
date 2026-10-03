@@ -12,6 +12,8 @@ type Fake = {
   levelError?: unknown;
   practitioner?: { id: string } | null;
   practitionerError?: unknown;
+  passwordSet?: unknown;
+  passwordSetError?: unknown;
 };
 
 function fakeClient(f: Fake) {
@@ -28,11 +30,13 @@ function fakeClient(f: Fake) {
       },
     },
     from,
+    rpc: vi.fn(async (name: string) =>
+      name === "password_is_set" ? { data: f.passwordSetError ? null : (f.passwordSet ?? true), error: f.passwordSetError ?? null } : { data: null, error: { message: "unexpected rpc" } }),
   };
   return { client: client as unknown as SupabaseClient, from };
 }
 
-const user = { id: "u1", user_metadata: { password_set: true } };
+const user = { id: "u1", user_metadata: {} };
 const verified = { id: "f1", status: "verified", factor_type: "totp" };
 
 describe("getAuthState", () => {
@@ -84,8 +88,18 @@ describe("getAuthState", () => {
     expect((await getAuthState(client)).hasVerifiedFactor).toBe(false);
   });
 
-  it("only treats password_set true as set", async () => {
-    const { client } = fakeClient({ user: { id: "u1", user_metadata: { password_set: "true" } } });
+  it("takes passwordSet from the database flag, not from user metadata", async () => {
+    const { client } = fakeClient({ user: { id: "u1", user_metadata: { password_set: true } }, passwordSet: false });
     expect((await getAuthState(client)).passwordSet).toBe(false);
+  });
+
+  it("reports passwordSet when the database flag is set", async () => {
+    const { client } = fakeClient({ user, passwordSet: true });
+    expect((await getAuthState(client)).passwordSet).toBe(true);
+  });
+
+  it("throws when the password flag cannot be read", async () => {
+    const { client } = fakeClient({ user, passwordSetError: { message: "db down" } });
+    await expect(getAuthState(client)).rejects.toThrow(/password is set/);
   });
 });
