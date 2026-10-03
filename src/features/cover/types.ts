@@ -13,3 +13,6 @@ export type GrantRow = {
 };
 
 export type Colleague = { id: string; full_name: string };
+
+// What the colleague search returns to the browser: matches, or a message to show.
+export type ColleagueSearchResult = { colleagues: Colleague[] } | { error: string };

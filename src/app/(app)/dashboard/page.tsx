@@ -3,11 +3,12 @@ import { requireReady } from "@/features/auth/require-ready";
 import { getProfile } from "@/features/settings/queries";
 import { listClients } from "@/features/clients/queries";
 import { listGrants } from "@/features/cover/queries";
+import { activeCoverGiven } from "@/features/cover/active-cover-given";
 
 export default async function DashboardPage() {
-  await requireReady();
+  const me = await requireReady();
   const [profile, clients, grants] = await Promise.all([getProfile(), listClients(), listGrants()]);
-  const activeGiven = grants.filter((g) => g.grantor_practitioner_id === profile.id && !g.revoked_at && (!g.ends_at || new Date(g.ends_at) > new Date())).length;
+  const activeGiven = activeCoverGiven(grants, me, new Date());
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold text-sage-900">Kia ora, {profile.full_name.split(" ")[0]}</h1>
