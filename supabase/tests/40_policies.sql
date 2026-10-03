@@ -1,11 +1,14 @@
 begin;
-select plan(22);
+select plan(30);
 
-insert into practitioner (id, auth_user_id, full_name, email) values
-  ('a0000000-0000-0000-0000-000000000001', tests.create_user('owner@example.test'),  'Owner',  'owner@example.test'),
-  ('a0000000-0000-0000-0000-000000000002', tests.create_user('backup@example.test'), 'Backup', 'backup@example.test'),
-  ('a0000000-0000-0000-0000-000000000003', tests.create_user('viewer@example.test'), 'Viewer', 'viewer@example.test'),
-  ('a0000000-0000-0000-0000-000000000004', tests.create_user('other@example.test'),  'Other',  'other@example.test');
+insert into practitioner (id, auth_user_id, full_name, email, is_operator) values
+  ('a0000000-0000-0000-0000-000000000001', tests.create_user('owner@example.test'),     'Owner',     'owner@example.test',     false),
+  ('a0000000-0000-0000-0000-000000000002', tests.create_user('backup@example.test'),    'Backup',    'backup@example.test',    false),
+  ('a0000000-0000-0000-0000-000000000003', tests.create_user('viewer@example.test'),    'Viewer',    'viewer@example.test',    false),
+  ('a0000000-0000-0000-0000-000000000004', tests.create_user('other@example.test'),     'Other',     'other@example.test',     false),
+  ('a0000000-0000-0000-0000-000000000005', tests.create_user('peek@example.test'),      'Peek',      'peek@example.test',      false),
+  ('a0000000-0000-0000-0000-000000000006', tests.create_user('operator@example.test'),  'Operator',  'operator@example.test',  true),
+  ('a0000000-0000-0000-0000-000000000007', tests.create_user('colleague@example.test'), 'Colleague', 'colleague@example.test', false);
 insert into practice (id, name) values ('b0000000-0000-0000-0000-000000000001', 'Practice');
 insert into practice_member (practice_id, practitioner_id, role) values
   ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'admin'),
@@ -13,22 +16,12 @@ insert into practice_member (practice_id, practitioner_id, role) values
 insert into client (id, owner_practitioner_id, first_name, last_name) values
   ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'One', 'Client'),
   ('c0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000004', 'Two', 'Client');
-insert into access_grant (grantor_practitioner_id, grantee_type, grantee_id, client_id, level, created_by) values
-  ('a0000000-0000-0000-0000-000000000001', 'practitioner', 'a0000000-0000-0000-0000-000000000002', null, 'cover', 'a0000000-0000-0000-0000-000000000001'),
-  ('a0000000-0000-0000-0000-000000000001', 'practitioner', 'a0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001', 'view', 'a0000000-0000-0000-0000-000000000001');
-
--- helper to log in as a practitioner id. Resets to the superuser first so the
--- lookup is not blocked by RLS when called while already logged in as someone
--- else. (Postgres forbids changing the role inside a security definer function,
--- so this cannot be done with security definer.)
-create or replace function tests.login(p_practitioner uuid, p_aal text default 'aal2') returns void
-language plpgsql as $$
-declare v uuid;
-begin
-  perform tests.admin();
-  select auth_user_id into v from public.practitioner where id = p_practitioner;
-  perform tests.login_user(v, p_aal);
-end $$;
+-- backup: cover on the caseload; viewer and peek: view on client 1 (viewer's is revoked below); operator: view on client 1 for 2 days.
+insert into access_grant (grantor_practitioner_id, grantee_type, grantee_id, client_id, level, created_by, ends_at) values
+  ('a0000000-0000-0000-0000-000000000001', 'practitioner', 'a0000000-0000-0000-0000-000000000002', null, 'cover', 'a0000000-0000-0000-0000-000000000001', null),
+  ('a0000000-0000-0000-0000-000000000001', 'practitioner', 'a0000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-000000000001', 'view', 'a0000000-0000-0000-0000-000000000001', null),
+  ('a0000000-0000-0000-0000-000000000001', 'practitioner', 'a0000000-0000-0000-0000-000000000005', 'c0000000-0000-0000-0000-000000000001', 'view', 'a0000000-0000-0000-0000-000000000001', null),
+  ('a0000000-0000-0000-0000-000000000001', 'operator',     null,                                   'c0000000-0000-0000-0000-000000000001', 'view', 'a0000000-0000-0000-0000-000000000001', now() + interval '2 days');
 
 -- every table has RLS on
 select is((select bool_and(relrowsecurity) from pg_class c join pg_namespace n on n.oid = c.relnamespace
@@ -51,7 +44,16 @@ select throws_ok($$ insert into client (owner_practitioner_id, first_name, last_
   values ('a0000000-0000-0000-0000-000000000004', 'New', 'Client') $$, '42501', null, 'owner cannot create a client owned by someone else');
 select lives_ok($$ update client set preferred_name = 'Uno' where id = 'c0000000-0000-0000-0000-000000000001' $$, 'owner can update her client');
 select throws_ok($$ delete from client where id = 'c0000000-0000-0000-0000-000000000001' $$, '42501', null, 'owner cannot hard delete');
-select is((select count(*) from access_grant), 2::bigint, 'owner sees the grants she gave');
+select is((select count(*) from access_grant), 4::bigint, 'owner sees the grants she gave');
+select lives_ok($$ insert into access_grant (grantor_practitioner_id, grantee_type, grantee_id, client_id, level, created_by)
+  values ('a0000000-0000-0000-0000-000000000001', 'practitioner', 'a0000000-0000-0000-0000-000000000007', 'c0000000-0000-0000-0000-000000000001', 'cover', 'a0000000-0000-0000-0000-000000000001') $$,
+  'owner can grant a colleague cover');
+select throws_ok($$ insert into access_grant (grantor_practitioner_id, grantee_type, grantee_id, client_id, level, created_by)
+  values ('a0000000-0000-0000-0000-000000000001', 'practitioner', 'a0000000-0000-0000-0000-000000000006', 'c0000000-0000-0000-0000-000000000001', 'cover', 'a0000000-0000-0000-0000-000000000001') $$,
+  '42501', null, 'owner cannot grant the operator access as if she were a colleague');
+select throws_ok($$ insert into access_grant (grantor_practitioner_id, grantee_type, grantee_id, client_id, level, kind, created_by)
+  values ('a0000000-0000-0000-0000-000000000001', 'practitioner', 'a0000000-0000-0000-0000-000000000007', 'c0000000-0000-0000-0000-000000000001', 'view', 'historical', 'a0000000-0000-0000-0000-000000000001') $$,
+  '42501', null, 'only a transfer can create a historical grant');
 select throws_ok($$ insert into access_grant (grantor_practitioner_id, grantee_type, grantee_id, client_id, level, created_by)
   values ('a0000000-0000-0000-0000-000000000004', 'practitioner', 'a0000000-0000-0000-0000-000000000001', null, 'cover', 'a0000000-0000-0000-0000-000000000001') $$,
   '42501', null, 'owner cannot create a grant on behalf of another practitioner');
@@ -66,11 +68,26 @@ select is((select count(*) from practice_member), 2::bigint, 'owner sees members
 select tests.login('a0000000-0000-0000-0000-000000000002');
 select is((select count(*) from client), 2::bigint, 'backup sees the whole caseload (2 clients, one created above)');
 select lives_ok($$ update client set preferred_name = 'Covered' where id = 'c0000000-0000-0000-0000-000000000001' $$, 'backup with cover can update');
+select throws_ok($$ update client set deleted_at = now() where id = 'c0000000-0000-0000-0000-000000000001' $$,
+  '42501', 'only the owner can delete or restore a client', 'backup with cover cannot soft delete');
 select is((select count(*) from access_grant), 1::bigint, 'backup sees the grant she received');
 
 -- viewer whose grant was revoked
 select tests.login('a0000000-0000-0000-0000-000000000003');
 select is((select count(*) from client), 0::bigint, 'revoked viewer sees nothing');
+
+-- view grantee can read but not write
+select tests.login('a0000000-0000-0000-0000-000000000005');
+select is((select count(*) from client), 1::bigint, 'view grantee sees the client');
+with u as (update client set preferred_name = 'Peeked' where id = 'c0000000-0000-0000-0000-000000000001' returning id)
+select is((select count(*) from u), 0::bigint, 'view grantee update touches no rows');
+
+-- operator with a support grant can read but not write, and never owns clients
+select tests.login('a0000000-0000-0000-0000-000000000006');
+with u as (update client set preferred_name = 'Operated' where id = 'c0000000-0000-0000-0000-000000000001' returning id)
+select is((select count(*) from u), 0::bigint, 'operator update touches no rows');
+select throws_ok($$ insert into client (owner_practitioner_id, first_name, last_name)
+  values ('a0000000-0000-0000-0000-000000000006', 'Op', 'Owned') $$, '42501', null, 'operator cannot create a client');
 
 -- other practitioner with no relationship
 select tests.login('a0000000-0000-0000-0000-000000000004');

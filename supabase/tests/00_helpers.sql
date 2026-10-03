@@ -43,3 +43,16 @@ begin
   perform set_config('request.jwt.claim.sub', '', true);
   perform set_config('role', 'none', true);
 end $$;
+
+-- Acts as the given practitioner. Resets to the superuser first so the lookup is
+-- not blocked by RLS when called while already acting as someone else. (Postgres
+-- forbids changing the role inside a security definer function, so this cannot
+-- be done with security definer.)
+create or replace function tests.login(p_practitioner uuid, p_aal text default 'aal2') returns void
+language plpgsql as $$
+declare v uuid;
+begin
+  perform tests.admin();
+  select auth_user_id into v from public.practitioner where id = p_practitioner;
+  perform tests.login_user(v, p_aal);
+end $$;
