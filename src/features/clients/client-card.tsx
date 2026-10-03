@@ -1,0 +1,24 @@
+import Link from "next/link";
+import type { ClientSummary } from "./types";
+
+export function displayName(c: Pick<ClientSummary, "first_name" | "last_name" | "preferred_name">): string {
+  const first = c.preferred_name ? `${c.preferred_name} (${c.first_name})` : c.first_name;
+  return `${first} ${c.last_name}`;
+}
+
+export function ClientCard({ client }: { client: ClientSummary }) {
+  return (
+    <Link
+      href={`/clients/${client.id}`}
+      className="flex items-center justify-between bg-white border border-warm-200 rounded-[14px] px-4 py-3 active:bg-warm-50"
+    >
+      <div>
+        <p className="text-[15px] font-medium text-sage-900">{displayName(client)}</p>
+        <p className="text-xs text-warm-400">{client.nhi ?? "No NHI recorded"}</p>
+      </div>
+      <span className="text-warm-300" aria-hidden>
+        &rsaquo;
+      </span>
+    </Link>
+  );
+}
