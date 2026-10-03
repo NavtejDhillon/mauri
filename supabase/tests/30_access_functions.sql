@@ -12,8 +12,10 @@ insert into practitioner (id, auth_user_id, full_name, email, status, is_operato
   ('a0000000-0000-0000-0000-000000000007', tests.create_user('expired@example.test'),  'Expired',  'expired@example.test',  'active', false),
   ('a0000000-0000-0000-0000-000000000008', tests.create_user('future@example.test'),   'Future',   'future@example.test',   'active', false);
 insert into practice (id, name) values ('b0000000-0000-0000-0000-000000000001', 'Practice');
+-- The operator is also a practice member: practice grants must not reach an operator account.
 insert into practice_member (practice_id, practitioner_id, role) values
-  ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000003', 'member');
+  ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000003', 'member'),
+  ('b0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000006', 'member');
 insert into client (id, owner_practitioner_id, first_name, last_name) values
   ('c0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000001', 'One', 'Client'),
   ('c0000000-0000-0000-0000-000000000002', 'a0000000-0000-0000-0000-000000000001', 'Two', 'Client');
@@ -61,7 +63,7 @@ select is(can_access_client('c0000000-0000-0000-0000-000000000001', 'view'), fal
 
 select tests.login('a0000000-0000-0000-0000-000000000006');
 select is(can_access_client('c0000000-0000-0000-0000-000000000002', 'view'), true, 'operator has view within the support window');
-select is(can_access_client('c0000000-0000-0000-0000-000000000001', 'view'), false, 'operator has nothing outside the grant');
+select is(can_access_client('c0000000-0000-0000-0000-000000000001', 'view'), false, 'operator has nothing outside the grant, even as a practice member');
 
 select tests.login('a0000000-0000-0000-0000-000000000007');
 select is(can_access_client('c0000000-0000-0000-0000-000000000001', 'view'), false, 'expired grant gives nothing');
