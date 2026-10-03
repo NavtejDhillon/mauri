@@ -5,7 +5,7 @@ import { useFormStatus } from "react-dom";
 import { revokeCover } from "./actions";
 import { FormMessage } from "@/components/ui/form-message";
 
-const button = "min-h-11 min-w-11 px-4 py-2 text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed";
+const button = "min-h-11 min-w-11 px-4 py-2 whitespace-nowrap text-sm font-medium rounded-full disabled:opacity-50 disabled:cursor-not-allowed";
 
 function ConfirmButton() {
   const { pending } = useFormStatus();
@@ -33,7 +33,7 @@ export function RevokeCoverButton({ grantId, who }: { grantId: string; who: stri
   }, [confirming]);
 
   return (
-    <div className="space-y-2 sm:text-right">
+    <div className="space-y-2 sm:shrink-0 sm:max-w-72 sm:text-right">
       {confirming ? (
         <form action={action} className="space-y-2">
           <input type="hidden" name="id" value={grantId} />
