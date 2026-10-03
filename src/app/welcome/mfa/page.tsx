@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { requireStep } from "@/features/auth/require-step";
 import { MfaEnrol } from "@/features/onboarding/mfa-enrol";
+
+export const metadata: Metadata = { title: "Set up your authenticator" };
 
 export default async function WelcomeMfaPage() {
   await requireStep("/welcome/mfa");

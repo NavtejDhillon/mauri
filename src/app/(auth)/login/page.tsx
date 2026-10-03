@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { LoginForm } from "@/features/auth/login-form";
 import { FormMessage } from "@/components/ui/form-message";
+
+export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ invite?: string }> }) {
   const { invite } = await searchParams;

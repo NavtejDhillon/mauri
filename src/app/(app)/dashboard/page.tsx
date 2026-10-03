@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { requireReady } from "@/features/auth/require-ready";
 import { getProfile } from "@/features/settings/queries";
 import { listClients } from "@/features/clients/queries";
 import { listGrants } from "@/features/cover/queries";
 import { activeCoverGiven } from "@/features/cover/active-cover-given";
+
+export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const me = await requireReady();

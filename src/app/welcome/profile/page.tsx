@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { requireStep } from "@/features/auth/require-step";
 import { ProfileForm } from "@/features/onboarding/profile-form";
+
+export const metadata: Metadata = { title: "About you" };
 
 export default async function WelcomeProfilePage() {
   await requireStep("/welcome/profile");

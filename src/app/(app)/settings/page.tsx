@@ -1,7 +1,10 @@
+import type { Metadata } from "next";
 import { requireReady } from "@/features/auth/require-ready";
 import { getProfile } from "@/features/settings/queries";
 import { ProfileForm } from "@/features/settings/profile-form";
 import { SignOutButton } from "@/features/auth/sign-out-button";
+
+export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   await requireReady();

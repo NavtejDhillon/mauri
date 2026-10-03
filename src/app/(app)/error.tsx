@@ -23,6 +23,8 @@ export default function AppError({ error, reset }: { error: Error & { digest?: s
 
   return (
     <div className="space-y-4 md:max-w-lg">
+      {/* A client component cannot export metadata; React places this title in the head. */}
+      <title>Something went wrong | Mauri</title>
       <h1 className="text-2xl font-semibold text-sage-900">Something went wrong</h1>
       <p className="text-sm text-warm-700">This page could not be loaded. Nothing you saved earlier has been lost. Try again, and if it keeps happening, contact support.</p>
       <div className="flex flex-col gap-3 md:flex-row">

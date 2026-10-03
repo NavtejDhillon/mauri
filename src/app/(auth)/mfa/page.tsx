@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { requireStep } from "@/features/auth/require-step";
 import { SignOutLink } from "@/features/auth/sign-out-link";
 import { MfaChallengeForm } from "@/features/auth/mfa-challenge-form";
+
+export const metadata: Metadata = { title: "Enter your code" };
 
 export default async function MfaPage() {
   await requireStep("/mfa");

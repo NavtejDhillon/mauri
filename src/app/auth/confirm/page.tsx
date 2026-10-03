@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { FormMessage } from "@/components/ui/form-message";
 import { ConfirmInviteForm } from "@/features/onboarding/confirm-invite-form";
+
+export const metadata: Metadata = { title: "Accept your invitation" };
 
 type Params = { token_hash?: string | string[]; type?: string | string[] };
 

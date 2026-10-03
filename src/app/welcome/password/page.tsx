@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { requireStep } from "@/features/auth/require-step";
 import { PasswordForm } from "@/features/onboarding/password-form";
+
+export const metadata: Metadata = { title: "Choose a password" };
 
 export default async function WelcomePasswordPage() {
   await requireStep("/welcome/password");

@@ -18,6 +18,9 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
 
   return (
     <html lang="en-NZ">
+      <head>
+        <title>Something went wrong | Mauri</title>
+      </head>
       <body style={page}>
         <main style={box}>
           <h1 style={{ fontSize: 24, fontWeight: 600, color: "#1a2d17", margin: "0 0 12px" }}>Something went wrong</h1>

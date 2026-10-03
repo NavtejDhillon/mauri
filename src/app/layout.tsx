@@ -16,7 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mauri - Maternity Practice",
+  // Each page sets its own title, shown as "Clients | Mauri".
+  title: { default: "Mauri", template: "%s | Mauri" },
   description: "Maternity practice management for NZ midwives",
   manifest: "/manifest.json",
   appleWebApp: {

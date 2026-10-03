@@ -1,4 +1,7 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = { title: "Not found" };
 
 // Shown inside the app shell when a page calls notFound(), for example a client who does not
 // exist or whom she cannot see. The two cases look the same on purpose.
