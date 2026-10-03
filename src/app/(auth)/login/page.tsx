@@ -1,3 +1,18 @@
+import { LoginForm } from "@/features/auth/login-form";
+
 export default function LoginPage() {
-  return <h1 className="p-6 text-2xl font-semibold text-sage-900">Sign in</h1>;
+  return (
+    <div className="min-h-screen bg-warm-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-sage-600 rounded-[14px] mb-4">
+            <span className="text-white text-2xl font-bold">M</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-sage-900">Mauri</h1>
+          <p className="text-sm text-warm-400 mt-1">Maternity practice management</p>
+        </div>
+        <LoginForm />
+      </div>
+    </div>
+  );
 }
