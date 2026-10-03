@@ -1,12 +1,17 @@
+import { requireReady } from "@/features/auth/require-ready";
+import { readyForAction } from "@/features/auth/ready-for-action";
 import { listClients } from "@/features/clients/queries";
 import { searchColleagues } from "@/features/cover/queries";
 import { displayName } from "@/features/clients/client-card";
 import { NewGrantForm } from "@/features/cover/new-grant-form";
 
 export default async function NewCoverPage() {
+  await requireReady();
   const clients = (await listClients()).map((c) => ({ id: c.id, name: displayName(c) }));
   async function search(query: string) {
     "use server";
+    const ready = await readyForAction();
+    if ("error" in ready) throw new Error(ready.error);
     return searchColleagues(query);
   }
   return (

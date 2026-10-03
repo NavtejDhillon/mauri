@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { requireReady } from "@/features/auth/require-ready";
 import { getProfile } from "@/features/settings/queries";
 import { listClients } from "@/features/clients/queries";
 import { listGrants } from "@/features/cover/queries";
 
 export default async function DashboardPage() {
+  await requireReady();
   const [profile, clients, grants] = await Promise.all([getProfile(), listClients(), listGrants()]);
   const activeGiven = grants.filter((g) => g.grantor_practitioner_id === profile.id && !g.revoked_at && (!g.ends_at || new Date(g.ends_at) > new Date())).length;
   return (

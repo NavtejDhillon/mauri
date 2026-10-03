@@ -1,8 +1,10 @@
+import { requireReady } from "@/features/auth/require-ready";
 import { getProfile } from "@/features/settings/queries";
 import { ProfileForm } from "@/features/settings/profile-form";
 import { SignOutButton } from "@/features/auth/sign-out-button";
 
 export default async function SettingsPage() {
+  await requireReady();
   const profile = await getProfile();
   return (
     <div className="md:max-w-2xl space-y-4">

@@ -1,6 +1,8 @@
+import { requireStep } from "@/features/auth/require-step";
 import { MfaEnrol } from "@/features/onboarding/mfa-enrol";
 
-export default function WelcomeMfaPage() {
+export default async function WelcomeMfaPage() {
+  await requireStep("/welcome/mfa");
   return (
     <>
       <div className="text-center mb-8">

@@ -1,6 +1,8 @@
+import { requireStep } from "@/features/auth/require-step";
 import { ProfileForm } from "@/features/onboarding/profile-form";
 
-export default function WelcomeProfilePage() {
+export default async function WelcomeProfilePage() {
+  await requireStep("/welcome/profile");
   return (
     <>
       <div className="text-center mb-8">

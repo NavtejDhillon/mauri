@@ -11,7 +11,6 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const [state, action] = useActionState(saveProfile, null);
   return (
     <form action={action} className="space-y-4">
-      <input type="hidden" name="id" value={profile.id} />
       <FormField id="full_name" label="Full name" defaultValue={profile.full_name} required />
       <FormField id="phone" label="Mobile" type="tel" inputMode="tel" defaultValue={profile.phone ?? ""} />
       <FormField id="midwifery_council_number" label="Midwifery Council number" defaultValue={profile.midwifery_council_number ?? ""} />

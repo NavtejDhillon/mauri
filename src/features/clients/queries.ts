@@ -28,10 +28,3 @@ export async function openClient(id: string): Promise<ClientSummary | null> {
   if (auditError) throw new Error("Could not record access: " + auditError.message);
   return data;
 }
-
-export async function currentPractitionerId(): Promise<string | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase.rpc("current_practitioner_id");
-  if (error) throw new Error("Could not resolve practitioner: " + error.message);
-  return (data as string | null) ?? null;
-}

@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/features/auth/actions";
-import { currentPractitionerId } from "@/features/clients/queries";
+import { readyForAction } from "@/features/auth/ready-for-action";
 
 export async function giveCover(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const ready = await readyForAction();
+  if ("error" in ready) return ready;
   const granteeId = String(formData.get("grantee_id") ?? "");
   const clientId = String(formData.get("client_id") ?? "");
   const level = String(formData.get("level") ?? "cover");
@@ -16,8 +18,7 @@ export async function giveCover(_prev: ActionResult, formData: FormData): Promis
   if (clientId && !/^[0-9a-f-]{36}$/.test(clientId)) return { error: "That client reference is not valid." };
   if (level !== "cover" && level !== "view") return { error: "Choose an access level." };
 
-  const me = await currentPractitionerId();
-  if (!me) return { error: "Your session has expired. Sign in again." };
+  const me = ready.practitionerId;
   const supabase = await createClient();
   const { error } = await supabase.from("access_grant").insert({
     grantor_practitioner_id: me,
@@ -37,6 +38,8 @@ export async function giveCover(_prev: ActionResult, formData: FormData): Promis
 }
 
 export async function revokeCover(formData: FormData): Promise<void> {
+  const ready = await readyForAction();
+  if ("error" in ready) throw new Error(ready.error);
   const id = String(formData.get("id") ?? "");
   if (!/^[0-9a-f-]{36}$/.test(id)) throw new Error("Invalid grant id");
   const supabase = await createClient();

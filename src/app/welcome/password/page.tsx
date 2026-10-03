@@ -1,6 +1,8 @@
+import { requireStep } from "@/features/auth/require-step";
 import { PasswordForm } from "@/features/onboarding/password-form";
 
-export default function WelcomePasswordPage() {
+export default async function WelcomePasswordPage() {
+  await requireStep("/welcome/password");
   return (
     <>
       <div className="text-center mb-8">

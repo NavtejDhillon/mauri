@@ -1,8 +1,10 @@
+import { requireReady } from "@/features/auth/require-ready";
 import { notFound } from "next/navigation";
 import { openClient } from "@/features/clients/queries";
 import { displayName } from "@/features/clients/client-card";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireReady();
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const client = await openClient(id);
