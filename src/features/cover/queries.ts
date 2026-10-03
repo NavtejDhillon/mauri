@@ -22,7 +22,8 @@ export async function searchColleagues(query: string): Promise<Colleague[]> {
 export async function nameLookup(): Promise<Map<string, string>> {
   const supabase = await createClient();
   const names = new Map<string, string>();
-  const { data: me } = await supabase.from("practitioner").select("id, full_name").maybeSingle<Colleague>();
+  const { data: me, error: meError } = await supabase.from("practitioner").select("id, full_name").maybeSingle<Colleague>();
+  if (meError) throw new Error("Could not load your name: " + meError.message);
   if (me) names.set(me.id, me.full_name);
   const { data, error } = await supabase.rpc("grant_counterparty_names");
   if (error) throw new Error("Could not load colleague names: " + error.message);
