@@ -8,6 +8,7 @@ import { clientIp } from "@/lib/client-ip";
 import { abandonSession } from "./abandon-session";
 import { attemptLimiter } from "./attempt-limiter";
 import { describeAuthFailure } from "./auth-failure";
+import { markSignedOut } from "./mark-signed-out";
 import { readyForAction } from "./ready-for-action";
 import { serviceProblem } from "./service-problem";
 import { tooManyAttempts } from "./too-many-attempts";
@@ -64,6 +65,7 @@ export async function signOut(): Promise<ActionResult> {
     console.error("signOut: global sign-out failed", error);
     return { error: "Could not sign you out everywhere. Try again." };
   }
+  await markSignedOut();
   redirect("/login");
 }
 
@@ -75,5 +77,6 @@ export async function signOutHere(): Promise<ActionResult> {
     console.error("signOutHere: sign-out failed", error);
     return { error: "Could not sign you out. Try again." };
   }
+  await markSignedOut();
   redirect("/login");
 }

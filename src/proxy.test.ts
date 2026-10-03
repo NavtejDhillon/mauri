@@ -59,6 +59,16 @@ describe("proxy", () => {
     }
   });
 
+  it("treats only the public paths themselves and their sub-paths as public", async () => {
+    for (const path of ["/auth/confirm/extra", "/login/"]) {
+      expect((await proxy(get(path))).headers.get("location"), path).toBeNull();
+    }
+    for (const path of ["/loginx", "/auth/confirmed", "/auth", "/", "/welcome/password", "/mfa"]) {
+      const res = await proxy(get(path));
+      expect(new URL(res.headers.get("location")!).pathname, path).toBe("/login");
+    }
+  });
+
   it("keeps refreshed session cookies on a redirect", async () => {
     fake.user = { id: "u1" };
     fake.refresh = true;
@@ -74,6 +84,30 @@ describe("proxy", () => {
     const res = await proxy(get("/clients", { cookie: "sb-x-auth-token=old" }));
     expect(res.headers.get("x-middleware-request-cookie")).toContain("sb-x-auth-token=new");
     expect(res.headers.get("set-cookie")).toContain("sb-x-auth-token=new");
+  });
+
+  it("tells the browser to clear cache and storage on the first request after sign-out", async () => {
+    const res = await proxy(get("/login", { cookie: "mauri_signed_out=1" }));
+    expect(res.headers.get("clear-site-data")).toBe('"cache", "storage"');
+    expect(res.headers.get("set-cookie")).toMatch(/mauri_signed_out=;.*Expires=Thu, 01 Jan 1970/i);
+  });
+
+  it("sends Clear-Site-Data on a redirect to sign in too", async () => {
+    const res = await proxy(get("/settings", { cookie: "mauri_signed_out=1" }));
+    expect(res.status).toBe(307);
+    expect(res.headers.get("clear-site-data")).toBe('"cache", "storage"');
+  });
+
+  it("does not clear anything for a signed-in visitor, and drops a stale marker", async () => {
+    fake.user = { id: "u1" };
+    const res = await proxy(get("/clients", { cookie: "mauri_signed_out=1" }));
+    expect(res.headers.get("clear-site-data")).toBeNull();
+    expect(res.headers.get("set-cookie")).toMatch(/mauri_signed_out=;/);
+  });
+
+  it("does not clear anything without the marker", async () => {
+    const res = await proxy(get("/login"));
+    expect(res.headers.get("clear-site-data")).toBeNull();
   });
 
   it("does not run for the service worker or static files, only for pages", () => {

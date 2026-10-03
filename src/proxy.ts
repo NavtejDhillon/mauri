@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 import { contentSecurityPolicy } from "@/lib/content-security-policy";
 import { requestIdHeader } from "@/lib/request-id-header";
+import { signedOutCookie } from "@/lib/signed-out-cookie";
 import { sessionCookieOptions } from "@/lib/supabase/cookie-options";
 
 const publicPaths = ["/login", "/auth/confirm"];
@@ -61,8 +62,20 @@ export async function proxy(request: NextRequest) {
     return redirect;
   };
 
-  if (!user && !isPublic(pathname)) return redirectTo("/login");
-  if (user && pathname === "/login") return redirectTo("/");
+  let result = response;
+  if (!user && !isPublic(pathname)) result = redirectTo("/login");
+  else if (user && pathname === "/login") result = redirectTo("/");
+  return afterSignOut(request, result, Boolean(user));
+}
+
+// The first response after a sign-out tells the browser to drop this site's cached pages and
+// stored data, so nothing clinical stays on a shared device. A server action cannot set that
+// header itself, so the sign-out action leaves a marker cookie for the request that follows.
+// Cookies are not cleared this way: the sign-out has already ended the session.
+function afterSignOut(request: NextRequest, response: NextResponse, signedIn: boolean): NextResponse {
+  if (!request.cookies.has(signedOutCookie.name)) return response;
+  if (!signedIn) response.headers.set("Clear-Site-Data", '"cache", "storage"');
+  response.cookies.delete(signedOutCookie.name);
   return response;
 }
 
