@@ -6,8 +6,10 @@
 // 5. a table anon can select from
 // 6. a function in public that anon can execute
 // 7. a table anon can insert, update or delete, or authenticated can delete
-// Exit code 1 on any finding outside the allowlist (which covers reads only).
+// Exit code 1 on any finding outside the two allowlists: reviewed reads (checks 2, 4 and 5)
+// and reviewed anon-executable functions (check 6). Writes are never allowlisted.
 import { Client } from "pg";
+import { publicExecuteAllowlist } from "./public-execute-allowlist";
 import { publicReadAllowlist } from "./public-read-allowlist";
 
 // DATABASE_URL points at any database. Without it, the throwaway test database is assumed,
@@ -17,6 +19,7 @@ const url =
   `postgresql://supabase_admin:postgres@${process.env.DB_TEST_HOST ?? "localhost"}:${process.env.DB_TEST_PORT ?? "54329"}/mauri_test`;
 
 const allow = new Set(publicReadAllowlist.map((a) => a.relation));
+const allowExecute = new Set(publicExecuteAllowlist.map((a) => a.signature));
 const findings: string[] = [];
 
 async function main() {
@@ -56,13 +59,15 @@ async function main() {
   );
   for (const t of anonTables.rows) if (!allow.has(t.relname)) findings.push(`anon has SELECT privilege: public.${t.relname}`);
 
-  // Functions are never allowlisted: the house rule is explicit grants to authenticated only.
+  // The house rule is explicit grants to authenticated only; anon execute needs a reviewed entry.
   const anonFunctions = await db.query<{ signature: string }>(
     `select p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ')' as signature
      from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname = 'public' and has_function_privilege('anon', p.oid, 'EXECUTE') order by 1`
   );
-  for (const f of anonFunctions.rows) findings.push(`anon can execute function: public.${f.signature}`);
+  for (const f of anonFunctions.rows) {
+    if (!allowExecute.has(f.signature)) findings.push(`anon can execute function: public.${f.signature}`);
+  }
 
   // Writes are never allowlisted either: anon writes nothing, and nobody hard deletes.
   const writable = await db.query<{ relname: string; who: string; priv: string }>(
