@@ -2,33 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useOnlineStatus } from "@/hooks/use-online-status";
-import { useTautoko } from "@/components/ai/agent-context";
-import {
-  IconHome,
-  IconUsers,
-  IconCalendar,
-  IconDollar,
-  IconSettings,
-  IconSparkles,
-} from "./icons";
+import { IconHome, IconUsers, IconCalendar, IconSettings } from "./icons";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", Icon: IconHome },
   { href: "/clients", label: "Clients", Icon: IconUsers },
-  { href: "/calendar", label: "Calendar", Icon: IconCalendar },
-  { href: "/claims", label: "Claims", Icon: IconDollar },
+  { href: "/cover", label: "Cover", Icon: IconCalendar },
   { href: "/settings", label: "Settings", Icon: IconSettings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const isOnline = useOnlineStatus();
-  const { toggle: toggleTautoko } = useTautoko();
 
   return (
     <>
-      {/* Desktop sidebar — hidden on mobile */}
+      {/* Desktop sidebar, hidden on mobile */}
       <aside className="fixed left-0 top-0 bottom-0 w-60 bg-white border-r border-warm-200 flex-col hidden md:flex z-40">
         <div className="p-4 flex items-center gap-3">
           <div className="flex items-center justify-center w-9 h-9 bg-sage-600 rounded-[10px]">
@@ -58,29 +46,6 @@ export function Sidebar() {
             );
           })}
         </nav>
-
-        <div className="px-3 pb-2">
-          <button
-            onClick={toggleTautoko}
-            className="flex items-center gap-3 w-full px-3 py-2 text-sm text-plum-600 rounded-[10px] hover:bg-plum-50 transition-colors duration-150"
-          >
-            <IconSparkles size={20} />
-            <span>Tautoko AI</span>
-          </button>
-        </div>
-
-        <div className="px-4 py-3 border-t border-warm-200">
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                isOnline ? "bg-sage-500" : "bg-coral-400"
-              }`}
-            />
-            <span className="text-xs text-warm-400">
-              {isOnline ? "Online" : "Offline"}
-            </span>
-          </div>
-        </div>
       </aside>
 
       {/* Mobile bottom tab bar */}
