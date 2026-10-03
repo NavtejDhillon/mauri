@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 import { Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -15,7 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Mauri - Maternity Practice",
+  // Each page sets its own title, shown as "Clients | Mauri".
+  title: { default: "Mauri", template: "%s | Mauri" },
   description: "Maternity practice management for NZ midwives",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -29,44 +31,27 @@ export const viewport: Viewport = {
   themeColor: "#4a7040",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Render every page per request, so each one carries the request's CSP nonce on Next's
+  // scripts. A page prerendered at build time has no nonce and its scripts would be blocked.
+  await connection();
   return (
-    <html lang="en">
+    <html lang="en-NZ">
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body
         className={`${instrumentSans.variable} ${jetbrainsMono.variable} antialiased`}
       >
         {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(reg) {
-                      console.log('[SW] Registered, scope:', reg.scope);
-                    })
-                    .catch(function(err) {
-                      console.log('[SW] Registration failed:', err);
-                    });
-                });
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   );

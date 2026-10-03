@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mauri
 
-## Getting Started
+Maternity practice management for New Zealand midwives. A Next.js app on a self-hosted Supabase (Postgres and auth). Every database query runs as the signed-in midwife, under row level security; the browser never talks to the database directly.
 
-First, run the development server:
+## Setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Requires Node 20 or later and pnpm.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+    pnpm install
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local` (git-ignored) with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `SUPABASE_URL`: the Supabase API address
+- `SUPABASE_ANON_KEY`: the anon key
+- `MAURI_GATEWAY_KEY`: the shared key the reverse proxy in front of the Supabase API requires on every request (header `x-mauri-gateway-key`)
 
-## Learn More
+These are server-only. Nothing is prefixed `NEXT_PUBLIC`, so none of it reaches the browser.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `pnpm dev`: development server on port 3000
+- `pnpm build` and `pnpm start`: production build and server
+- `pnpm typecheck`, `pnpm lint`, `pnpm test`: type check, lint and unit tests
+- `pnpm db:test`: pgTAP tests against a throwaway database (see `supabase/README.md`)
+- `pnpm db:audit:test`: security audit of the test database's grants and policies
+- `pnpm db:migrate`: apply pending migrations to staging
+- `pnpm ops:invite`: invite a midwife (see `scripts/ops/README.md`)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Layout
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app`: routes. `(app)` holds the signed-in screens; `welcome` and `mfa` are the sign-in steps.
+- `src/features`: screens and server actions by area (auth, onboarding, clients, cover, settings).
+- `src/lib`: shared helpers (environment, Supabase client, request ids, dates, error messages).
+- `src/proxy.ts`: runs on every page request: request id, Content-Security-Policy, session refresh.
+- `supabase/migrations`: the schema, applied in order and never edited once applied.
+- `public/sw.js`: retires a service worker an earlier build installed. The app registers none.

@@ -57,7 +57,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
         onClick={onClose}
       />
 
-      {/* Sheet — full bottom on mobile, centered modal on desktop */}
+      {/* Sheet: full bottom on mobile, centered modal on desktop */}
       <div
         ref={sheetRef}
         className="absolute bottom-0 left-0 right-0 md:relative md:bottom-auto md:left-auto md:right-auto md:w-full md:max-w-md bg-white rounded-t-[20px] md:rounded-[14px] shadow-xl sheet-enter max-h-[90vh] flex flex-col"
