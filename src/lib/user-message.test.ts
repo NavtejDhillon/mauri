@@ -70,7 +70,7 @@ describe("userMessage", () => {
 
   it("uses plain punctuation only", async () => {
     for (const code of ["23505", "23514", "23502", "23503", "22001", "22007", "42501", "PGRST301", "57014", "weak_password", "same_password", "insufficient_aal", "mfa_factor_name_conflict", "mfa_factor_not_found", "otp_expired", "over_request_rate_limit"]) {
-      expect(await userMessage("x", { code })).not.toMatch(/[–—]/);
+      expect(await userMessage("x", { code })).not.toMatch(/[\u2013\u2014]/);
     }
   });
 });
