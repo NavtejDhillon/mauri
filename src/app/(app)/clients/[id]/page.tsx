@@ -2,6 +2,7 @@ import { requireReady } from "@/features/auth/require-ready";
 import { notFound } from "next/navigation";
 import { openClient } from "@/features/clients/queries";
 import { displayName } from "@/features/clients/client-card";
+import { formatDate } from "@/lib/format-date";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
   await requireReady();
@@ -14,7 +15,7 @@ export default async function ClientPage({ params }: { params: Promise<{ id: str
       <h1 className="text-2xl font-semibold text-sage-900">{displayName(client)}</h1>
       <dl className="bg-white border border-warm-200 rounded-[14px] p-4 space-y-2 text-sm md:max-w-lg">
         <Row label="NHI" value={client.nhi} />
-        <Row label="Date of birth" value={client.date_of_birth} />
+        <Row label="Date of birth" value={client.date_of_birth && formatDate(client.date_of_birth)} />
       </dl>
       <p className="text-xs text-warm-400">The clinical record for this client is built in stage 2.</p>
     </div>

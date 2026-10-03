@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatDate } from "@/lib/format-date";
 import { revokeCover } from "./actions";
 import type { GrantRow } from "./types";
 
@@ -15,7 +16,7 @@ function scope(g: GrantRow, clientNames: Map<string, string>): string {
 function status(g: GrantRow): string {
   if (g.revoked_at) return "Revoked";
   if (g.ends_at && new Date(g.ends_at) < new Date()) return "Ended";
-  return g.ends_at ? `Until ${new Date(g.ends_at).toLocaleDateString("en-NZ")}` : "Ongoing";
+  return g.ends_at ? `Until ${formatDate(g.ends_at)}` : "Ongoing";
 }
 
 export function GrantList({ grants, me, names, clientNames }: Props) {
