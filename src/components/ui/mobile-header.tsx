@@ -32,7 +32,7 @@ export function MobileHeader({
         {showBack && (
           <button
             onClick={handleBack}
-            className="flex items-center justify-center w-10 h-10 -ml-2 rounded-full active:bg-warm-100 transition-colors duration-100 md:hidden"
+            className="flex items-center justify-center w-11 h-11 -ml-2 rounded-full active:bg-warm-100 transition-colors duration-100 md:hidden"
             aria-label="Back"
           >
             <IconChevronLeft size={22} className="text-warm-500" />

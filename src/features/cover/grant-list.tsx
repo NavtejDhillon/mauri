@@ -25,7 +25,7 @@ export function GrantList({ grants, me, names, clientNames }: Props) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-sage-900">Cover</h1>
-        <Link href="/cover/new" className="px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700">Give cover</Link>
+        <Link href="/cover/new" className="inline-flex items-center min-h-11 px-4 py-2 text-sm font-medium text-white bg-sage-600 rounded-[10px] hover:bg-sage-700">Give cover</Link>
       </div>
       <Section title="Cover I have given" empty="You have not given anyone cover.">
         {given.map((g) => (
@@ -37,7 +37,7 @@ export function GrantList({ grants, me, names, clientNames }: Props) {
             {!g.revoked_at && g.kind === "standard" && (
               <form action={revokeCover}>
                 <input type="hidden" name="id" value={g.id} />
-                <button type="submit" className="px-3 py-1.5 text-xs font-medium text-coral-600 bg-coral-50 border border-coral-100 rounded-full">Revoke</button>
+                <button type="submit" className="min-h-11 min-w-11 px-4 py-2 text-sm font-medium text-coral-600 bg-coral-50 border border-coral-100 rounded-full">Revoke</button>
               </form>
             )}
           </li>

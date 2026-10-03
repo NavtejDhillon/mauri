@@ -30,8 +30,6 @@ export const viewport: Viewport = {
   themeColor: "#4a7040",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -44,7 +42,7 @@ export default async function RootLayout({
   // scripts. A page prerendered at build time has no nonce and its scripts would be blocked.
   await connection();
   return (
-    <html lang="en">
+    <html lang="en-NZ">
       <head>
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

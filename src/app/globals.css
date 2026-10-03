@@ -16,9 +16,9 @@
   --color-warm-100: #f0ebe3;
   --color-warm-200: #e5ddd1;
   --color-warm-300: #d4c8b8;
-  --color-warm-400: #b8a894;
-  --color-warm-500: #9c8e7a;
-  --color-warm-600: #8a7a6a;
+  --color-warm-400: #796f62;
+  --color-warm-500: #746a5b;
+  --color-warm-600: #716457;
   --color-warm-700: #6b5f52;
   --color-warm-800: #504840;
   --color-warm-900: #383028;
@@ -27,7 +27,7 @@
   --color-coral-100: #fcd5ca;
   --color-coral-200: #f9b0a0;
   --color-coral-400: #e87756;
-  --color-coral-600: #c45535;
+  --color-coral-600: #b04c30;
   --color-coral-700: #a84529;
   --color-coral-800: #7a2e1a;
 
@@ -73,11 +73,13 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ─── Mobile-first: prevent iOS zoom on inputs ── */
 
+/* 16px stops iOS zooming in on focus. Only a mouse-driven wide screen gets smaller text, so a
+   tablet (touch, often 768px or wider) keeps 16px. */
 input, select, textarea {
   font-size: 16px;
 }
 
-@media (min-width: 768px) {
+@media (pointer: fine) and (min-width: 768px) {
   input, select, textarea {
     font-size: 14px;
   }
@@ -217,7 +219,7 @@ main > div {
 
 /* Focus ring for keyboard navigation */
 :focus-visible {
-  outline: 2px solid var(--color-sage-400);
+  outline: 2px solid var(--color-sage-600);
   outline-offset: 2px;
   border-radius: var(--radius);
 }

@@ -30,14 +30,14 @@ export function ColleagueSearch({ search }: Props) {
         onChange={(e) => onChange(e.target.value)}
         autoComplete="off"
         placeholder="Start typing her name"
-        className="w-full px-3 py-2 text-base md:text-sm border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-400 focus:ring-1 focus:ring-sage-400"
+        className="w-full min-h-11 px-3 py-2 text-base border border-warm-200 rounded-[10px] bg-warm-50 text-warm-800 focus:outline-none focus:border-sage-600 focus:ring-1 focus:ring-sage-600"
       />
       <input type="hidden" name="grantee_id" value={chosen?.id ?? ""} />
       {!chosen && results.length > 0 && (
         <ul className="mt-1 bg-white border border-warm-200 rounded-[10px] divide-y divide-warm-100">
           {results.map((c) => (
             <li key={c.id}>
-              <button type="button" onClick={() => setChosen(c)} className="w-full text-left px-3 py-2 text-sm hover:bg-warm-50">
+              <button type="button" onClick={() => setChosen(c)} className="w-full min-h-11 text-left px-3 py-2 text-sm hover:bg-warm-50">
                 {c.full_name}
               </button>
             </li>

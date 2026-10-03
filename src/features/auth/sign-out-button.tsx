@@ -11,7 +11,7 @@ function Button() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full md:w-auto px-4 py-3 md:py-2 text-sm font-medium rounded-[10px] text-coral-600 bg-coral-50 border border-coral-100 active:bg-coral-100 disabled:opacity-50 disabled:cursor-not-allowed"
+      className="w-full md:w-auto min-h-11 px-4 py-2.5 text-sm font-medium rounded-[10px] text-coral-600 bg-coral-50 border border-coral-100 active:bg-coral-100 disabled:opacity-50 disabled:cursor-not-allowed"
     >
       {pending ? "Signing out..." : "Sign out everywhere"}
     </button>

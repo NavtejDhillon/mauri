@@ -22,7 +22,7 @@ export default async function ConfirmPage({ searchParams }: { searchParams: Prom
         ) : (
           <div className="space-y-4 text-center">
             <FormMessage error="That invitation link is not valid or has expired. Ask for a new one." />
-            <Link href="/login" className="inline-block text-sm text-warm-600 underline underline-offset-2 py-2">Go to sign in</Link>
+            <Link href="/login" className="inline-flex items-center min-h-11 px-2 text-sm text-warm-600 underline underline-offset-2">Go to sign in</Link>
           </div>
         )}
       </div>

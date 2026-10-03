@@ -8,7 +8,7 @@ import { FormMessage } from "@/components/ui/form-message";
 function LinkButton() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="text-sm text-warm-600 underline underline-offset-2 py-2 disabled:opacity-50">
+    <button type="submit" disabled={pending} className="min-h-11 px-2 text-sm text-warm-600 underline underline-offset-2 disabled:opacity-50">
       {pending ? "Signing out..." : "Not you? Sign out"}
     </button>
   );
