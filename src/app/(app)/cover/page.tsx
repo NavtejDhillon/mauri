@@ -1,7 +1,7 @@
 import { requireReady } from "@/features/auth/require-ready";
 import { listGrants, nameLookup } from "@/features/cover/queries";
 import { listClients } from "@/features/clients/queries";
-import { displayName } from "@/features/clients/client-card";
+import { displayName } from "@/features/clients/display-name";
 import { GrantList } from "@/features/cover/grant-list";
 
 export default async function CoverPage() {

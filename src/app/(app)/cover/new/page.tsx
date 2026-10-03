@@ -2,7 +2,7 @@ import { requireReady } from "@/features/auth/require-ready";
 import { readyForAction } from "@/features/auth/ready-for-action";
 import { listClients } from "@/features/clients/queries";
 import { searchColleagues } from "@/features/cover/queries";
-import { displayName } from "@/features/clients/client-card";
+import { displayName } from "@/features/clients/display-name";
 import { NewGrantForm } from "@/features/cover/new-grant-form";
 
 export default async function NewCoverPage() {

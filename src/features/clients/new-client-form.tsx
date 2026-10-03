@@ -21,7 +21,7 @@ export function NewClientForm() {
         <FormField id="first_name" label="First name" required {...name} defaultValue={values.first_name} error={errorFor("first_name")} />
         <FormField id="last_name" label="Surname" required {...name} defaultValue={values.last_name} error={errorFor("last_name")} />
         <FormField id="preferred_name" label="Preferred name" {...name} defaultValue={values.preferred_name} />
-        <FormField id="nhi" label="NHI number" autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="ABC1234" maxLength={7} defaultValue={values.nhi} error={errorFor("nhi")} />
+        <FormField id="nhi" label="NHI number" autoComplete="off" autoCapitalize="characters" spellCheck={false} hint="7 characters, such as ZZZ0016 or ZZZ00AC. Leave it empty if you do not have it yet." maxLength={9} defaultValue={values.nhi} error={errorFor("nhi")} />
         <FormField id="date_of_birth" label="Date of birth" type="date" autoComplete="off" defaultValue={values.date_of_birth} />
         <FormMessage error={state?.field ? null : state?.error} />
       </div>

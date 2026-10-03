@@ -1,10 +1,6 @@
 import Link from "next/link";
+import { displayName } from "./display-name";
 import type { ClientSummary } from "./types";
-
-export function displayName(c: Pick<ClientSummary, "first_name" | "last_name" | "preferred_name">): string {
-  const first = c.preferred_name ? `${c.preferred_name} (${c.first_name})` : c.first_name;
-  return `${first} ${c.last_name}`;
-}
 
 export function ClientCard({ client }: { client: ClientSummary }) {
   return (

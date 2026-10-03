@@ -1,7 +1,7 @@
 import { requireReady } from "@/features/auth/require-ready";
 import { notFound } from "next/navigation";
 import { openClient } from "@/features/clients/queries";
-import { displayName } from "@/features/clients/client-card";
+import { displayName } from "@/features/clients/display-name";
 import { formatDate } from "@/lib/format-date";
 
 export default async function ClientPage({ params }: { params: Promise<{ id: string }> }) {
