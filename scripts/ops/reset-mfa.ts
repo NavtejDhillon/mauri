@@ -1,10 +1,33 @@
 // Removes a midwife's authenticator (TOTP factor) after she has lost it and ends every session
-// on her account, so she enrols a new one at her next sign-in and nothing signed in on the lost
-// device carries on. Only run this after confirming who she is by a route other than email
-// (see README.md). Usage: pnpm ops:reset-mfa her@example.nz
+// on her account (forgetting her known devices too), so she enrols a new one at her next sign-in
+// and nothing signed in on the lost device carries on. With --temporary-password it first gives
+// her a new random password, for when the lost phone may have held the old one. Only run this after confirming who she is by a route other than email
+// (see README.md). Usage: pnpm ops:reset-mfa [--temporary-password] her@example.nz
+import { randomInt } from "node:crypto";
 import { createInterface } from "node:readline/promises";
+import { parseArgs } from "node:util";
 import { createClient, type User } from "@supabase/supabase-js";
 import { Client } from "pg";
+
+const usage = `usage: pnpm ops:reset-mfa [--temporary-password] <email>
+
+Removes her authenticator, ends every session on her account and forgets her known devices,
+after you type her email address again to confirm.
+
+  --temporary-password  Also give her a new random password, set before the authenticator is
+                        removed and shown once. Use it whenever the lost phone may have held her
+                        password. Read it to her over the verified call; never send it by text
+                        or email.
+  --help                Show this and change nothing.`;
+
+// URL-safe characters only, so the password reads aloud and types without surprises.
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+function temporaryPassword(length = 24): string {
+  let out = "";
+  for (let i = 0; i < length; i++) out += alphabet[randomInt(alphabet.length)];
+  return out;
+}
 
 function required(name: string): string {
   const v = process.env[name];
@@ -13,9 +36,25 @@ function required(name: string): string {
 }
 
 async function main() {
-  const email = (process.argv[2] ?? "").trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-    console.error("usage: pnpm ops:reset-mfa <email>");
+  let parsed;
+  try {
+    parsed = parseArgs({
+      allowPositionals: true,
+      options: { "temporary-password": { type: "boolean" }, help: { type: "boolean", short: "h" } },
+    });
+  } catch (e) {
+    console.error(`${e instanceof Error ? e.message : e}\n\n${usage}`);
+    process.exitCode = 2;
+    return;
+  }
+  if (parsed.values.help) {
+    console.log(usage);
+    return;
+  }
+  const newPassword = parsed.values["temporary-password"] === true;
+  const email = (parsed.positionals[0] ?? "").trim().toLowerCase();
+  if (parsed.positionals.length !== 1 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+    console.error(usage);
     process.exitCode = 2;
     return;
   }
@@ -44,7 +83,12 @@ async function main() {
   // again, so the sessions are ended even when there is no authenticator left to remove.
   if (totp.length === 0) console.log("No authenticator to remove. At her next sign-in she will be asked to set one up.");
 
-  const what = totp.length === 0 ? "end every session on her account" : `remove ${totp.length === 1 ? "this authenticator" : "these authenticators"} and end every session on her account`;
+  const steps = [
+    ...(newPassword ? ["give her a temporary password"] : []),
+    ...(totp.length === 0 ? [] : [`remove ${totp.length === 1 ? "this authenticator" : "these authenticators"}`]),
+    "end every session on her account",
+  ];
+  const what = steps.length === 1 ? steps[0] : `${steps.slice(0, -1).join(", ")} and ${steps[steps.length - 1]}`;
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   const typed = (await rl.question(`Type her email address again to ${what}: `)).trim().toLowerCase();
   rl.close();
@@ -60,6 +104,18 @@ async function main() {
   const db = new Client({ connectionString: required("OPS_DATABASE_URL") });
   await db.connect();
   try {
+    // The password goes first: if anything after it fails, she still has a password nobody else
+    // knows, and it is shown straight away so it is never lost.
+    if (newPassword) {
+      const password = temporaryPassword();
+      const { error } = await admin.auth.admin.updateUserById(user.id, { password });
+      if (error) throw new Error(`could not set a temporary password, so nothing was changed: ${error.message}`);
+      console.log("");
+      console.log(`Temporary password: ${password}`);
+      console.log("Read it to her now over the verified call. Never send it by text or email, and do not write it down anywhere else.");
+      console.log("If this run stops below, run it again without --temporary-password so this password stays hers.");
+      console.log("");
+    }
     for (const f of totp) {
       const { error } = await admin.auth.admin.mfa.deleteFactor({ id: f.id, userId: user.id });
       if (error) throw new Error(`could not remove factor ${f.id}: ${error.message}`);
@@ -77,8 +133,9 @@ async function main() {
   } finally {
     await db.end();
   }
-  console.log("Done. Ask her to sign in with her password; she will be taken to set up a new authenticator.");
-  console.log("Access tokens already issued stay valid at the API for up to an hour. If the lost phone may have held her password, reset that too.");
+  console.log(`Done. Ask her to sign in with ${newPassword ? "the temporary password" : "her password"}; she will be taken to set up a new authenticator.`);
+  console.log("Access tokens already issued stay valid at the API for up to an hour.");
+  if (!newPassword) console.log("If the lost phone may have held her password, run this again with --temporary-password.");
 }
 
 // exitCode rather than process.exit, which can abort on Windows while fetch connections close.
