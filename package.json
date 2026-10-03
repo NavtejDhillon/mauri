@@ -14,7 +14,8 @@
     "db:audit": "tsx scripts/db/security-audit.ts",
     "db:audit:test": "node --env-file-if-exists=.env.db-test --import tsx scripts/db/security-audit.ts",
     "db:migrate": "bash scripts/db/migrate.sh",
-    "ops:invite": "node --env-file=.env.ops --import tsx scripts/ops/invite.ts"
+    "ops:invite": "node --env-file=.env.ops --import tsx scripts/ops/invite.ts",
+    "ops:reset-mfa": "node --env-file=.env.ops --import tsx scripts/ops/reset-mfa.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

@@ -22,8 +22,10 @@ async function main() {
 
   const db = new Client({ connectionString: required("OPS_DATABASE_URL") });
   await db.connect();
+  // The auth service's invite token lasts 24 hours (GOTRUE_MAILER_OTP_EXP, default 86400
+  // seconds), so the invite row expires with it rather than with the table's 7 day default.
   const inserted = await db.query<{ id: string }>(
-    "insert into public.invite (email, invited_by) values ($1, $2) returning id",
+    "insert into public.invite (email, invited_by, expires_at) values ($1, $2, now() + interval '24 hours') returning id",
     [email, invitedBy]
   );
   await db.end();
@@ -37,7 +39,7 @@ async function main() {
     process.exit(1);
   }
   const link = `${siteUrl}/auth/confirm?token_hash=${encodeURIComponent(data.properties.hashed_token)}&type=invite`;
-  console.log(`Invite recorded (${inviteId}) for ${email}. Send her this link; it expires with the invite (7 days):`);
+  console.log(`Invite recorded (${inviteId}) for ${email}. Send her this link; it expires in 24 hours:`);
   console.log(link);
 }
 
