@@ -11,7 +11,7 @@ jobs:
     env:
       SUPABASE_URL: https://example.invalid
       SUPABASE_ANON_KEY: ci-placeholder
-      SITE_URL: https://example.invalid
+      MAURI_GATEWAY_KEY: ci-placeholder
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

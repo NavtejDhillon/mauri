@@ -8,5 +8,5 @@ function required(name: string): string {
 export const env = {
   supabaseUrl: required("SUPABASE_URL"),
   supabaseAnonKey: required("SUPABASE_ANON_KEY"),
-  siteUrl: required("SITE_URL"),
+  mauriGatewayKey: required("MAURI_GATEWAY_KEY"),
 };

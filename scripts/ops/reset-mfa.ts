@@ -8,6 +8,7 @@ import { createInterface } from "node:readline/promises";
 import { parseArgs } from "node:util";
 import { createClient, type User } from "@supabase/supabase-js";
 import { Client } from "pg";
+import { gatewayKeyHeader } from "../../src/lib/gateway-key-header";
 
 const usage = `usage: pnpm ops:reset-mfa [--temporary-password] <email>
 
@@ -58,7 +59,10 @@ async function main() {
     process.exitCode = 2;
     return;
   }
-  const admin = createClient(required("SUPABASE_URL"), required("SUPABASE_SERVICE_ROLE_KEY"), { auth: { persistSession: false, autoRefreshToken: false } });
+  const admin = createClient(required("SUPABASE_URL"), required("SUPABASE_SERVICE_ROLE_KEY"), {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { [gatewayKeyHeader]: required("MAURI_GATEWAY_KEY") } },
+  });
 
   // The admin API has no lookup by email, so page through the accounts.
   let user: User | undefined;

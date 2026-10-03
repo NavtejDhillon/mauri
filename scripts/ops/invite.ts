@@ -2,6 +2,7 @@
 // one-time invite token, and prints the link to send to her. Usage: pnpm ops:invite her@example.nz
 import { createClient } from "@supabase/supabase-js";
 import { Client } from "pg";
+import { gatewayKeyHeader } from "../../src/lib/gateway-key-header";
 
 function required(name: string): string {
   const v = process.env[name];
@@ -18,6 +19,7 @@ async function main() {
   const supabaseUrl = required("SUPABASE_URL");
   const serviceKey = required("SUPABASE_SERVICE_ROLE_KEY");
   const siteUrl = required("SITE_URL");
+  const gatewayKey = required("MAURI_GATEWAY_KEY");
   const invitedBy = process.env.USERNAME ?? process.env.USER ?? "operator";
 
   const db = new Client({ connectionString: required("OPS_DATABASE_URL") });
@@ -31,7 +33,10 @@ async function main() {
   await db.end();
   const inviteId = inserted.rows[0].id;
 
-  const admin = createClient(supabaseUrl, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { [gatewayKeyHeader]: gatewayKey } },
+  });
   const { data, error } = await admin.auth.admin.generateLink({ type: "invite", email });
   if (error || !data.properties?.hashed_token) {
     console.error("auth service refused the invite:", error?.message ?? "no token returned");

@@ -12,7 +12,7 @@ Create `.env.local` (git-ignored) with:
 
 - `SUPABASE_URL`: the Supabase API address
 - `SUPABASE_ANON_KEY`: the anon key
-- `SITE_URL`: where the app runs, for example `http://localhost:3000`
+- `MAURI_GATEWAY_KEY`: the shared key the reverse proxy in front of the Supabase API requires on every request (header `x-mauri-gateway-key`)
 
 These are server-only. Nothing is prefixed `NEXT_PUBLIC`, so none of it reaches the browser.
 

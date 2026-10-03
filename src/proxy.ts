@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 import { contentSecurityPolicy } from "@/lib/content-security-policy";
+import { gatewayKeyHeader } from "@/lib/gateway-key-header";
 import { requestIdHeader } from "@/lib/request-id-header";
 import { signedOutCookie } from "@/lib/signed-out-cookie";
 import { sessionCookieOptions } from "@/lib/supabase/cookie-options";
@@ -33,6 +34,7 @@ export async function proxy(request: NextRequest) {
 
   const supabase = createServerClient(env.supabaseUrl, env.supabaseAnonKey, {
     cookieOptions: sessionCookieOptions,
+    global: { headers: { [requestIdHeader]: id, [gatewayKeyHeader]: env.mauriGatewayKey } },
     cookies: {
       getAll() {
         return request.cookies.getAll();

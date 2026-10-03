@@ -1,20 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-vi.mock("@/lib/env", () => ({ env: { supabaseUrl: "https://db.example.invalid", supabaseAnonKey: "anon", siteUrl: "https://example.invalid" } }));
+vi.mock("@/lib/env", () => ({ env: { supabaseUrl: "https://db.example.invalid", supabaseAnonKey: "anon", mauriGatewayKey: "gateway-secret" } }));
 
 type CookieAdapter = { setAll: (c: { name: string; value: string; options: object }[]) => void };
-const fake = { user: null as { id: string } | null, refresh: false };
+type ClientOptions = { cookies: CookieAdapter; global?: { headers?: Record<string, string> } };
+const fake = { user: null as { id: string } | null, refresh: false, headers: undefined as Record<string, string> | undefined };
 
 vi.mock("@supabase/ssr", () => ({
-  createServerClient: (_url: string, _key: string, options: { cookies: CookieAdapter }) => ({
-    auth: {
-      getUser: async () => {
-        if (fake.refresh) options.cookies.setAll([{ name: "sb-x-auth-token", value: "new", options: { path: "/", httpOnly: true } }]);
-        return { data: { user: fake.user }, error: null };
+  createServerClient: (_url: string, _key: string, options: ClientOptions) => {
+    fake.headers = options.global?.headers;
+    return {
+      auth: {
+        getUser: async () => {
+          if (fake.refresh) options.cookies.setAll([{ name: "sb-x-auth-token", value: "new", options: { path: "/", httpOnly: true } }]);
+          return { data: { user: fake.user }, error: null };
+        },
       },
-    },
-  }),
+    };
+  },
 }));
 
 const { proxy, config } = await import("./proxy");
@@ -27,9 +31,18 @@ function get(path: string, headers: Record<string, string> = {}) {
 beforeEach(() => {
   fake.user = null;
   fake.refresh = false;
+  fake.headers = undefined;
 });
 
 describe("proxy", () => {
+  it("sends the gateway key and its own request id to the database API", async () => {
+    fake.user = { id: "u1" };
+    const res = await proxy(get("/clients", { "x-mauri-request-id": "forged" }));
+    expect(fake.headers?.["x-mauri-gateway-key"]).toBe("gateway-secret");
+    expect(fake.headers?.["x-mauri-request-id"]).toBe(res.headers.get("x-mauri-request-id"));
+    expect(fake.headers?.["x-mauri-request-id"]).toMatch(uuid);
+  });
+
   it("replaces a request id sent by the browser with its own", async () => {
     fake.user = { id: "u1" };
     const res = await proxy(get("/clients", { "x-mauri-request-id": "forged" }));
