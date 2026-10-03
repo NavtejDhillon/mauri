@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Wraps the database's attempt limit (auth_attempt_begin and auth_attempt_succeeded; see
-// migration 0014). begin() is called before the auth service is asked: it records the attempt
+// migrations 0014 and 0017). begin() is called before the auth service is asked: it records the attempt
 // as a failure, atomically, unless a limit is already reached. succeeded() is called after the
 // auth service accepts, and resets the count.
 // Password attempts are counted against the email and need no session. Code attempts are

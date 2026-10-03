@@ -1,5 +1,5 @@
 begin;
-select plan(25);
+select plan(34);
 
 select tests.create_user('midwife@example.test') as uid \gset
 select tests.create_user('other@example.test') as uid2 \gset
@@ -62,6 +62,32 @@ select is((select array_agg(token_hash order by token_hash) from known_device wh
 update known_device set expires_at = now() - interval '1 minute' where auth_user_id = :'uid';
 select tests.anon();
 select is(auth_attempt_begin('password', 'midwife@example.test', '192.0.2.1', repeat('d', 64)), false, 'an expired device is refused like an unknown one');
+
+-- Code attempts across all of an account's known devices are capped at 20 together, so a
+-- handful of device tokens cannot each spend their own five.
+select tests.admin();
+select tests.create_user('many-devices@example.test') as uid3 \gset
+select tests.login_user(:'uid3', 'aal2');
+select lives_ok($$ select known_device_register(repeat(t, 64), null) from unnest(array['e', 'f', 'g', 'h', 'i']) t $$, 'five devices are registered for one account');
+select tests.login_user(:'uid3', 'aal1');
+select is(bool_and(auth_attempt_begin('mfa', null, '198.51.100.1', repeat(t, 64))), true, 'five code failures on each of four known devices are allowed')
+from unnest(array['e', 'f', 'g', 'h']) t, generate_series(1, 5) g;
+select is(auth_attempt_begin('mfa', null, '198.51.100.1', repeat('i', 64)), false, 'a fifth known device is refused once the account has 20 known-device code failures');
+select is(auth_attempt_begin('mfa', null, '198.51.100.1', null), true, 'an unknown device keeps its own bucket');
+select tests.admin();
+select is((select count(*) from auth_attempt where kind = 'mfa' and device_hash = encode(sha256(convert_to(repeat('i', 64), 'UTF8')), 'hex')),
+  0::bigint, 'the refused attempt records nothing');
+-- A code success resets the cross-device count with the other buckets.
+select tests.login_user(:'uid3', 'aal2');
+select lives_ok($$ select auth_attempt_succeeded('mfa', null, '198.51.100.1') $$, 'a code success is recorded');
+select tests.login_user(:'uid3', 'aal1');
+select is(auth_attempt_begin('mfa', null, '198.51.100.1', repeat('i', 64)), true, 'after a success the fifth device is allowed again');
+
+-- The password step keeps per-device buckets only: the cross-device cap is for codes.
+select tests.anon();
+select is(bool_and(auth_attempt_begin('password', 'many-devices@example.test', '198.51.100.1', repeat(t, 64))), true, 'five password failures on each of four known devices')
+from unnest(array['e', 'f', 'g', 'h']) t, generate_series(1, 5) g;
+select is(auth_attempt_begin('password', 'many-devices@example.test', '198.51.100.1', repeat('i', 64)), true, 'a fifth known device can still try a password');
 
 select * from finish();
 rollback;
