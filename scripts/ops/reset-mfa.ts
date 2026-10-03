@@ -1,8 +1,10 @@
-// Removes a midwife's authenticator (TOTP factor) after she has lost it, so she enrols a new
-// one at her next sign-in. Only run this after confirming who she is by a route other than
-// email (see README.md). Usage: pnpm ops:reset-mfa her@example.nz
+// Removes a midwife's authenticator (TOTP factor) after she has lost it and ends every session
+// on her account, so she enrols a new one at her next sign-in and nothing signed in on the lost
+// device carries on. Only run this after confirming who she is by a route other than email
+// (see README.md). Usage: pnpm ops:reset-mfa her@example.nz
 import { createInterface } from "node:readline/promises";
 import { createClient, type User } from "@supabase/supabase-js";
+import { Client } from "pg";
 
 function required(name: string): string {
   const v = process.env[name];
@@ -38,26 +40,45 @@ async function main() {
   const totp = listed.factors.filter((f) => f.factor_type === "totp");
   console.log(`Account ${user.id} (${email}) has ${listed.factors.length} factor(s):`);
   for (const f of listed.factors) console.log(`  ${f.id}  ${f.factor_type}  ${f.status}  created ${f.created_at}`);
-  if (totp.length === 0) {
-    console.log("No authenticator to remove. At her next sign-in she will be asked to set one up.");
-    return;
-  }
+  // A run that removed the authenticator but could not end the sessions is finished by running
+  // again, so the sessions are ended even when there is no authenticator left to remove.
+  if (totp.length === 0) console.log("No authenticator to remove. At her next sign-in she will be asked to set one up.");
 
+  const what = totp.length === 0 ? "end every session on her account" : `remove ${totp.length === 1 ? "this authenticator" : "these authenticators"} and end every session on her account`;
   const rl = createInterface({ input: process.stdin, output: process.stdout });
-  const typed = (await rl.question(`Type her email address again to remove ${totp.length === 1 ? "this authenticator" : "these authenticators"}: `)).trim().toLowerCase();
+  const typed = (await rl.question(`Type her email address again to ${what}: `)).trim().toLowerCase();
   rl.close();
   if (typed !== email) {
-    console.error("The email did not match. Nothing was removed.");
+    console.error("The email did not match. Nothing was changed.");
     process.exitCode = 1;
     return;
   }
 
-  for (const f of totp) {
-    const { error } = await admin.auth.admin.mfa.deleteFactor({ id: f.id, userId: user.id });
-    if (error) throw new Error(`could not remove factor ${f.id}: ${error.message}`);
-    console.log(`Removed ${f.id}.`);
+  // Removing a factor leaves her sessions signed in at the level they had, so a lost phone's
+  // session would keep working. Only the database can end them (ops.end_sessions, as mauri_ops).
+  // Connect first, so a database problem stops the run before anything is changed.
+  const db = new Client({ connectionString: required("OPS_DATABASE_URL") });
+  await db.connect();
+  try {
+    for (const f of totp) {
+      const { error } = await admin.auth.admin.mfa.deleteFactor({ id: f.id, userId: user.id });
+      if (error) throw new Error(`could not remove factor ${f.id}: ${error.message}`);
+      console.log(`Removed ${f.id}.`);
+    }
+    let count: number | undefined;
+    try {
+      const ended = await db.query<{ ended: number }>("select ops.end_sessions($1, $2) as ended", [user.id, "authenticator reset by operator"]);
+      count = ended.rows[0]?.ended;
+    } catch (e) {
+      throw new Error(`could not end her sessions, so the lost device may still be signed in. Run this command again. (${e instanceof Error ? e.message : e})`);
+    }
+    if (typeof count !== "number") throw new Error("ops.end_sessions returned no count. Run this command again.");
+    console.log(`Ended ${count} session${count === 1 ? "" : "s"}.`);
+  } finally {
+    await db.end();
   }
   console.log("Done. Ask her to sign in with her password; she will be taken to set up a new authenticator.");
+  console.log("Access tokens already issued stay valid at the API for up to an hour. If the lost phone may have held her password, reset that too.");
 }
 
 // exitCode rather than process.exit, which can abort on Windows while fetch connections close.
