@@ -36,7 +36,7 @@ export function FormField({ id, label, type = "text", hint, error, ...rest }: Pr
         aria-invalid={error ? true : undefined}
         {...rest}
         className={`w-full min-h-11 px-3 py-2 text-base border rounded-[10px] bg-warm-50 text-warm-800 placeholder:text-warm-400 focus:outline-none focus:ring-1 transition-colors duration-150 ${
-          error ? "border-coral-600 focus:border-coral-600 focus:ring-coral-600" : "border-warm-200 focus:border-sage-600 focus:ring-sage-600"
+          error ? "border-coral-600 focus:border-coral-600 focus:ring-coral-600" : "border-field-line focus:border-sage-600 focus:ring-sage-600"
         }`}
       />
       {hint && (
