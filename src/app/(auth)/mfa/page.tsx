@@ -1,4 +1,5 @@
 import { requireStep } from "@/features/auth/require-step";
+import { SignOutLink } from "@/features/auth/sign-out-link";
 import { MfaChallengeForm } from "@/features/auth/mfa-challenge-form";
 
 export default async function MfaPage() {
@@ -11,6 +12,7 @@ export default async function MfaPage() {
           <p className="text-sm text-warm-400 mt-1">Enter the code from your authenticator app</p>
         </div>
         <MfaChallengeForm />
+        <SignOutLink />
       </div>
     </div>
   );
