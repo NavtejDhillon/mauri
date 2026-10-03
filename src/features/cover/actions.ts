@@ -8,6 +8,7 @@ import { userMessage } from "@/lib/user-message";
 import { nzEndOfDay } from "@/lib/nz-end-of-day";
 import { nzToday } from "@/lib/nz-today";
 import { readyForAction } from "@/features/auth/ready-for-action";
+import { isGrantWindowViolation } from "./grant-window-violation";
 
 const uuidShape = /^[0-9a-f-]{36}$/;
 const pastEnd = "The last day of cover cannot be in the past. Choose today or a later date.";
@@ -64,10 +65,12 @@ export async function giveCover(_prev: ActionResult, formData: FormData): Promis
     created_by: me,
   });
   if (error) {
+    // Only the access_grant_window check means the end was not after the start (now); any other
+    // check failure gets the general message.
+    const pastDate = isGrantWindowViolation(error);
     return fail(
-      // access_grant_window (23514): the end must be after the start, which is now.
-      await userMessage("giveCover: insert access_grant", error, { codes: { "23514": pastEnd }, fallback: "Could not save the cover. Try again." }),
-      error.code === "23514" ? "ends_at" : undefined,
+      await userMessage("giveCover: insert access_grant", error, { codes: pastDate ? { "23514": pastEnd } : {}, fallback: "Could not save the cover. Try again." }),
+      pastDate ? "ends_at" : undefined,
     );
   }
   redirect("/cover");
