@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/features/auth/actions";
 import { checkStep } from "@/features/auth/check-step";
+import { verifyCode } from "@/features/auth/verify-code";
 
 // Only at the password step, that is while user_metadata.password_set is not true. Later
 // password changes need their own flow that asks for the current password.
@@ -55,8 +56,8 @@ export async function completeEnrolment(_prev: ActionResult, formData: FormData)
   const checked = await checkStep("/welcome/mfa");
   if ("error" in checked) return checked;
   const supabase = await createClient();
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId, code });
-  if (error) return { error: "That code was not accepted. Check the time on your phone and try the next code." };
+  const message = await verifyCode(supabase, factorId, code, "enrol");
+  if (message) return { error: message };
   redirect("/");
 }
 

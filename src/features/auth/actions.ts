@@ -1,8 +1,16 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { clientIp } from "@/lib/client-ip";
+import { abandonSession } from "./abandon-session";
+import { attemptLimiter } from "./attempt-limiter";
+import { describeAuthFailure } from "./auth-failure";
 import { readyForAction } from "./ready-for-action";
+import { serviceProblem } from "./service-problem";
+import { tooManyAttempts } from "./too-many-attempts";
+import { verifyCode } from "./verify-code";
 
 export type ActionResult = { error: string } | null;
 
@@ -11,8 +19,20 @@ export async function signIn(_prev: ActionResult, formData: FormData): Promise<A
   const password = String(formData.get("password") ?? "");
   if (!email || !password) return { error: "Enter your email and password." };
   const supabase = await createClient();
+  const limiter = attemptLimiter(supabase, "password", email, clientIp(await headers()));
+  const allowed = await limiter.allowed();
+  if (allowed === null) return { error: serviceProblem };
+  if (!allowed) return { error: tooManyAttempts };
+
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: "Email or password is incorrect." };
+  if (error) {
+    const failure = describeAuthFailure("password", error);
+    if (!failure.counts) console.error("signIn: signInWithPassword failed", error);
+    if (failure.counts && !(await limiter.record(false))) return { error: serviceProblem };
+    return { error: failure.message };
+  }
+  // Same client, so this call carries the new session, which the database requires to record a success.
+  if (!(await limiter.record(true))) return { error: await abandonSession(supabase, "signIn: could not record a successful sign-in") };
   redirect("/");
 }
 
@@ -21,11 +41,14 @@ export async function verifyMfa(_prev: ActionResult, formData: FormData): Promis
   if (code.length !== 6) return { error: "Enter the 6 digit code from your authenticator app." };
   const supabase = await createClient();
   const { data: factors, error: listError } = await supabase.auth.mfa.listFactors();
-  if (listError) return { error: "Could not read your authenticator settings." };
+  if (listError) {
+    console.error("verifyMfa: listFactors failed", listError);
+    return { error: "Could not read your authenticator settings. Try again shortly." };
+  }
   const factor = factors.totp.find((f) => f.status === "verified");
   if (!factor) redirect("/welcome/mfa");
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code });
-  if (error) return { error: "That code was not accepted. Codes change every 30 seconds." };
+  const message = await verifyCode(supabase, factor.id, code, "mfa");
+  if (message) return { error: message };
   redirect("/");
 }
 
