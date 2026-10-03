@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { connection } from "next/server";
 import { Instrument_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -34,11 +35,14 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Render every page per request, so each one carries the request's CSP nonce on Next's
+  // scripts. A page prerendered at build time has no nonce and its scripts would be blocked.
+  await connection();
   return (
     <html lang="en">
       <head>
